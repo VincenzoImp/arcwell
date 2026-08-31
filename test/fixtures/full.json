@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "profile": "full",
+  "posture": "guarded",
+  "intelligence": {
+    "packs": ["security", "engineering", "core"],
+    "workflows": ["research", "feature", "bugfix", "review", "audit", "plan"]
+  },
+  "modules": {
+    "claudeCode": true,
+    "herdr": true,
+    "mcp": true,
+    "sandbox": false
+  }
+}

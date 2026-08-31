@@ -1,0 +1,19 @@
+Arcwell
+Copyright (c) 2026 Arcwell contributors
+
+Arcwell's own source, native Pi resources, content, and documentation are
+licensed under the MIT License in LICENSE.
+
+The npm dependencies and Pi packages named by Arcwell are separate works and
+remain subject to their respective licenses and notices. They are not copied
+into the Arcwell package tarball; setup asks Pi to install selected exact
+package sources. Review those packages before installation or publication.
+
+A fresh macOS smoke of the complete accepted catalog observed package metadata
+under MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, and ISC licenses. This is
+resolution-specific evidence, not a complete or permanent transitive notice:
+direct package pins can still resolve changing transitive ranges. The one
+observed missing package-level license field was
+@spences10/pi-settings@0.0.3; its bundled LICENSE contains the MIT text and its
+README and installed parents identify it as github.com/spences10/my-pi
+infrastructure. Any changed version or provenance requires renewed review.

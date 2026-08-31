@@ -1,0 +1,61 @@
+{
+  "name": "arcwell",
+  "version": "0.1.0",
+  "description": "A reproducible, batteries-included environment for Pi.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist/src/**/*.js",
+    "dist/extensions/*.js",
+    "content/AGENTS.md",
+    "skills/*/SKILL.md",
+    "prompts/*.md",
+    "docs/*.md",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "keywords": [
+    "pi-package"
+  ],
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "pi": {
+    "extensions": [
+      "./dist/extensions/arcwell-protections.js"
+    ],
+    "skills": [
+      "./skills/code-review/SKILL.md",
+      "./skills/debug/SKILL.md"
+    ],
+    "prompts": [
+      "./prompts/implement.md",
+      "./prompts/implement-and-review.md",
+      "./prompts/scout-and-plan.md"
+    ]
+  },
+  "bin": {
+    "arcwell": "dist/src/cli.js"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "prepack": "npm --silent run build",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "test:model": "npm run build && node --test --test-concurrency=1 dist/test/model-smoke.test.js dist/test/worker-model-smoke.test.js",
+    "test:packages": "npm run build && node scripts/pi-package-smoke.mjs",
+    "check": "npm test"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "0.84.4",
+    "@earendil-works/pi-coding-agent": "0.84.4",
+    "typebox": "1.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.0",
+    "ajv": "8.17.1",
+    "typescript": "6.0.3",
+    "typescript-language-server": "6.0.0"
+  }
+}
