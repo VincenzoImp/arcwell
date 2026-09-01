@@ -3,25 +3,31 @@
 Read [`CONTEXT.md`](../CONTEXT.md) first: it carries the vocabulary and the boundaries, and
 this document assumes both.
 
-## The three levels of verification
+## The levels of verification
 
-All three are required, and the last one is not optional convenience — it is the only level
-that catches what the others structurally cannot.
+Each level catches a class of defect the ones before it structurally cannot, so `npm test`
+alone is not "the tests passed" — it is 138 of them and none of the smokes.
 
 ```bash
-npm test              # unit and integration against fake Pi clients
-npm run test:prepare  # a clean copy through npm install --omit=dev, prepare, and the loader
-npm run test:packages # real Pi, real packages, isolated scratch environment
-npm run check:upstream # extensions/upstream against Pi's own examples
-npm run check         # npm test + check:upstream
+npm test                          # unit and integration against fake Pi clients
+npm run check:upstream            # extensions/upstream against the installed Pi's examples
+npm run test:prepare              # a clean copy through npm install --omit=dev and the loader
+npm run test:packages             # real Pi, real catalog packages, isolated scratch environment
+npm run test:git-source -- <ref>  # a pushed ref through Pi's Git transport
+npm run check                     # the first two, for the edit-run loop
 ```
 
-`test:packages` is what found that two catalog packages registered tools Arcwell already
-registered, which makes Pi load neither. No amount of unit testing would have shown it.
-`test:prepare` is what proves the Git-source install path works, including that the upstream
-TypeScript extensions load without a build of their own.
+What each has caught that nothing else would have:
 
-`npm test` alone is not "the tests passed". It covers 138 of them and neither smoke.
+- **`test:packages`** — two catalog packages registering tools Arcwell already registered, which
+  makes Pi load neither. No unit test sees a collision between two real manifests.
+- **`check:upstream`** — `subagent/index.ts` left at Pi 0.84.2 while the package targeted
+  0.84.4, missing an `isProjectTrusted` check upstream had added.
+- **`test:prepare`** — that npm runs `prepare` under `--omit=dev` for Git sources, which is why
+  `typescript` is a runtime dependency rather than a dev one.
+- **`test:git-source`** — the transport itself: a pushed ref resolving, installing, and loading
+  with its version intact. It needs a ref that exists on the remote, so CI runs it on pushes to
+  `main` and a release runs it against the tag.
 
 ## Where a change goes
 

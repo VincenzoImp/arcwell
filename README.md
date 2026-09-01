@@ -131,7 +131,7 @@ trust state, pre-existing packages and unrelated bytes are untouched.
 | [`CONTEXT.md`](CONTEXT.md) | vocabulary, boundaries, and the reasoning behind the shape |
 | [`docs/specification.md`](docs/specification.md) | the exact contract: ownership, digests, compensation |
 | [`docs/dependencies.md`](docs/dependencies.md) | what is installed and why, and what was rejected |
-| [`docs/contributing.md`](docs/contributing.md) | how to change it, and the three levels of verification |
+| [`docs/contributing.md`](docs/contributing.md) | how to change it, and what each level of verification catches |
 | [`CHANGELOG.md`](CHANGELOG.md) | what moved between versions |
 
 ## Status
