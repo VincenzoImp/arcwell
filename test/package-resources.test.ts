@@ -30,6 +30,8 @@ test("package manifest declares the exact native Pi resource set", () => {
     "dist/extensions/*.js",
     "content/AGENTS.md",
     "skills/*/SKILL.md",
+    "skills/*/*.sh",
+    "agents/*.md",
     "prompts/*.md",
     "docs/*.md",
     "README.md",
@@ -42,7 +44,12 @@ test("package manifest declares the exact native Pi resource set", () => {
   assert.equal(pkg.scripts?.["test:packages"], "npm run build && node scripts/pi-package-smoke.mjs");
   assert.deepEqual(pkg.pi, {
     extensions: ["./dist/extensions/arcwell-protections.js"],
-    skills: ["./skills/code-review/SKILL.md", "./skills/debug/SKILL.md"],
+    skills: [
+      "./skills/code-review/SKILL.md",
+      "./skills/debug/SKILL.md",
+      "./skills/scope-check/SKILL.md",
+      "./skills/web/SKILL.md",
+    ],
     prompts: ["./prompts/implement.md", "./prompts/implement-and-review.md", "./prompts/scout-and-plan.md"],
   });
 });
@@ -102,8 +109,11 @@ test("DefaultResourceLoader discovers only package resources without project lea
     const skills = loader.getSkills().skills;
     assert.deepEqual(
       skills.filter((skill) => belongsToPackage(skill.filePath)).map((skill) => skill.name).sort(),
-      ["code-review", "debug"],
+      ["code-review", "debug", "scope-check", "web"],
     );
+    // Subagent definitions are not package resources: Pi's manifest carries no `agents` key,
+    // and the subagent extension reads them from <agentDir>/agents. Setup installs them there,
+    // so their coverage lives with the install path rather than here.
     const prompts = loader.getPrompts().prompts;
     assert.deepEqual(
       prompts.filter((prompt) => belongsToPackage(prompt.filePath)).map((prompt) => prompt.name).sort(),

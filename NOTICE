@@ -2,7 +2,31 @@ Arcwell
 Copyright (c) 2026 Arcwell contributors
 
 Arcwell's own source, native Pi resources, content, and documentation are
-licensed under the MIT License in LICENSE.
+licensed under the MIT License in LICENSE, except for the files named below.
+
+Pi coding agent — example subagents and prompt templates
+--------------------------------------------------------
+
+Upstream:  @earendil-works/pi-coding-agent
+Project:   https://github.com/earendil-works/pi
+Path:      packages/coding-agent/examples/extensions/subagent/
+Licence:   MIT, Copyright (c) 2025 Mario Zechner
+
+These arrived here through pi-setup, which records the same provenance. The
+markdown carries no header of its own: a header there is text the model reads on
+every use, and scout-and-plan.md could not carry one and stay byte-identical to
+upstream. This file is their only record.
+
+  prompts/scout-and-plan.md         byte-identical
+  prompts/implement.md              + verification step
+  prompts/implement-and-review.md   + verification step, reviewer sees the diff
+  agents/planner.md                 model pin removed, handoff sentence added
+  agents/scout.md                   tool limits and refusal handling rewritten
+  agents/reviewer.md                output format and bash scope rewritten
+  agents/worker.md                  rewritten around what a headless run can do
+
+Everything under skills/, content/, extensions/, src/, and scripts/ is original
+to this repository or to pi-setup, both MIT under LICENSE.
 
 The npm dependencies and Pi packages named by Arcwell are separate works and
 remain subject to their respective licenses and notices. They are not copied

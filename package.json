@@ -9,6 +9,8 @@
     "dist/extensions/*.js",
     "content/AGENTS.md",
     "skills/*/SKILL.md",
+    "skills/*/*.sh",
+    "agents/*.md",
     "prompts/*.md",
     "docs/*.md",
     "README.md",
@@ -27,7 +29,9 @@
     ],
     "skills": [
       "./skills/code-review/SKILL.md",
-      "./skills/debug/SKILL.md"
+      "./skills/debug/SKILL.md",
+      "./skills/scope-check/SKILL.md",
+      "./skills/web/SKILL.md"
     ],
     "prompts": [
       "./prompts/implement.md",

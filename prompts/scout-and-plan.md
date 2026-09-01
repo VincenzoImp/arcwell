@@ -1,8 +1,9 @@
 ---
-description: Inspect a project read-only and produce a bounded implementation plan
-argument-hint: "<goal>"
+description: Scout gathers context, planner creates implementation plan (no implementation)
 ---
+Use the subagent tool with the chain parameter to execute this workflow:
 
-Scout the project read-only for this goal: $@
+1. First, use the "scout" agent to find all code relevant to: $@
+2. Then, use the "planner" agent to create an implementation plan for "$@" using the context from the previous step (use {previous} placeholder)
 
-Identify the smallest relevant files, existing primitives, contracts, tests, and concrete risks. Do not modify files, invoke models recursively, access secrets, or perform network or remote effects. Produce a dependency-ordered plan with file paths, a failing-test step for each behavior change, and exact verification commands. Mark assumptions and decisions that require user approval.
+Execute this as a chain, passing output between steps via {previous}. Do NOT implement - just return the plan.

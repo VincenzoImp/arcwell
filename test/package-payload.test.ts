@@ -60,7 +60,9 @@ function allowedPayloadPath(path: string): boolean {
     /^package\.json$/,
     /^content\/AGENTS\.md$/,
     /^docs\/[^/]+\.md$/,
-    /^skills\/(?:code-review|debug)\/SKILL\.md$/,
+    /^skills\/(?:code-review|debug|scope-check|web)\/SKILL\.md$/,
+    /^skills\/web\/(?:search|fetch)\.sh$/,
+    /^agents\/(?:scout|planner|worker|reviewer)\.md$/,
     /^prompts\/(?:implement|implement-and-review|scout-and-plan)\.md$/,
     /^dist\/src\/.*\.js$/,
     /^dist\/extensions\/(?:arcwell-protections|effects)\.js$/,
@@ -80,7 +82,14 @@ test("npm pack dry-run contains only the explicit publish payload", () => {
   assert.ok(paths.includes("dist/extensions/arcwell-protections.js"), "compiled Pi extension must be packed");
   assert.ok(paths.includes("content/AGENTS.md"));
   assert.ok(paths.includes("skills/code-review/SKILL.md"));
+  assert.ok(paths.includes("agents/reviewer.md"));
   assert.ok(paths.includes("prompts/implement.md"));
+
+  // A skill script that arrives without its execute bit fails at the moment the agent
+  // counts on it, and content-only comparison cannot see the difference.
+  for (const script of result.files.filter((file) => file.path.endsWith(".sh"))) {
+    assert.equal(script.mode & 0o111, 0o111, `${script.path} must stay executable in the payload`);
+  }
   assert.ok(paths.includes("README.md"));
   assert.ok(paths.includes("docs/specification.md"));
   assert.ok(paths.includes("LICENSE"));
@@ -130,7 +139,7 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         .filter((skill) => belongsTo(packageRoot, skill.filePath))
         .map((skill) => skill.name)
         .sort(),
-      ["code-review", "debug"],
+      ["code-review", "debug", "scope-check", "web"],
     );
     assert.deepEqual(
       loader.getPrompts().prompts

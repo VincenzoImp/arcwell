@@ -1,8 +1,14 @@
 ---
-description: Implement an approved change with tests and focused verification
-argument-hint: "<approved task>"
+description: Full implementation workflow - scout gathers context, planner creates plan, worker implements
 ---
+Use the subagent tool with the chain parameter to execute this workflow:
 
-Implement the approved task: $@
+1. First, use the "scout" agent to find all code relevant to: $@
+2. Then, use the "planner" agent to create an implementation plan for "$@" using the context from the previous step (use {previous} placeholder)
+3. Finally, use the "worker" agent to implement the plan from the previous step (use {previous} placeholder)
 
-Stay within the stated scope. Read relevant project instructions and code first. Add a failing test, observe the failure, implement the smallest coherent fix, and run focused plus relevant broader verification. Do not perform remote effects or expose secrets. Report changed files, commands run, and anything not verified.
+Execute this as a chain, passing output between steps via {previous}.
+
+After the final step, read the complete diff and run the project's tests. Report the
+command output verbatim; if you ran nothing, say so.
+
