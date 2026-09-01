@@ -152,16 +152,55 @@ try {
       ...prompts.diagnostics,
     ])}`);
 
-  const installedExtensions = extensions.extensions.filter((entry) =>
-    entry.sourceInfo?.baseDir && realpathSync(entry.sourceInfo.baseDir) === installedPath);
-  assert(installedExtensions.length === 1,
-    `Expected one default extension from ${installedPath}, found ${installedExtensions.length}`);
-  assert(relative(installedPath, realpathSync(installedExtensions[0].resolvedPath)).replaceAll("\\", "/") === DEFAULT_EXTENSION,
-    `Default extension did not resolve to ${DEFAULT_EXTENSION}`);
-  assert(installedExtensions[0].sourceInfo.source === source,
-    `Default extension source did not remain ${source}`);
+  // The whole published payload, not just the default extension. A Git install ships only what
+  // the `files` whitelist allows plus what `prepare` builds, so this is the only level that
+  // proves the whitelist is complete. The lists are written out rather than read back from the
+  // installed manifest, which would make the assertion agree with the package by construction.
+  const belongsToPackage = (entry) =>
+    entry.sourceInfo?.baseDir && realpathSync(entry.sourceInfo.baseDir) === installedPath;
+  const relativeToPackage = (entry) =>
+    relative(installedPath, realpathSync(entry.resolvedPath)).replaceAll("\\", "/");
+  const namesOf = (entries) => JSON.stringify(entries.map((entry) => entry.name).sort());
 
-  console.log(`Git-source transport smoke passed for ${source} (${installedManifest.name}@${installedManifest.version}).`);
+  const installedExtensions = extensions.extensions.filter(belongsToPackage);
+  const extensionPaths = installedExtensions.map(relativeToPackage).sort();
+  assert(JSON.stringify(extensionPaths) === JSON.stringify([
+    "dist/extensions/arcwell-memory.js",
+    "dist/extensions/arcwell-protections.js",
+    "extensions/upstream/plan-mode/index.ts",
+    "extensions/upstream/preset.ts",
+    "extensions/upstream/questionnaire.ts",
+    "extensions/upstream/todo.ts",
+    "extensions/upstream/tools.ts",
+  ]), `Git-source payload delivered a different extension set: ${extensionPaths.join(", ")}`);
+  assert(extensionPaths.includes(DEFAULT_EXTENSION),
+    `Default extension ${DEFAULT_EXTENSION} was not among the loaded extensions`);
+  assert(installedExtensions.every((entry) => entry.sourceInfo.source === source),
+    `An installed extension did not carry the source ${source}`);
+
+  assert(namesOf(skills.skills.filter(belongsToPackage)) === JSON.stringify([
+    "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
+    "implementing", "planning", "prototype", "research", "scope-check", "tdd",
+    "verification", "version-control", "web",
+  ]), "Git-source payload did not deliver every skill");
+  assert(namesOf(prompts.prompts.filter(belongsToPackage)) ===
+    JSON.stringify(["autonomous", "implement", "implement-and-review", "quick", "scout-and-plan"]),
+    "Git-source payload did not deliver every prompt");
+
+  // Files nothing above would miss: setup reads these at runtime and `pi-subagents` discovers
+  // the agents from the package manifest, so a whitelist gap surfaces only in a real install.
+  for (const payloadPath of [
+    "content/AGENTS.md", "content/presets.json",
+    "agents/planner.md", "agents/reviewer.md", "agents/scout.md", "agents/worker.md",
+  ]) {
+    const path = join(installedPath, payloadPath);
+    assert(existsSync(path) && lstatSync(path).isFile(), `Git-source payload is missing ${payloadPath}`);
+  }
+
+  console.log(
+    `Git-source transport smoke passed for ${source} (${installedManifest.name}@${installedManifest.version}): ` +
+    `${extensionPaths.length} extensions, 15 skills, 5 prompts, 4 agents.`,
+  );
 } finally {
   try {
     restoreProcessEnvironment();

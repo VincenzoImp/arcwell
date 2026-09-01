@@ -89,8 +89,8 @@ test("local scratch setup, idempotent setup, doctor, and uninstall restore the e
     assert.deepEqual(readOwnership(join(root, "arcwell", "ownership.json"))?.installedPackageSources, installs);
     assert.equal(doctor.status, "healthy");
     assert.equal(doctor.exitStatus, 0);
-    // The subagent definitions and presets must be on disk for the extensions that read them
-    // to work at all, and an idempotent second setup must leave them untouched.
+    // Managed files must land on disk for the extensions that read them to work at all, and an
+    // idempotent second setup must leave them byte-identical.
     assert.equal(readFileSync(join(root, "agents", "reviewer.md"), "utf8"), managedResources[0]!.content);
     assert.deepEqual(first.installedResources.map((entry) => entry.path), ["agents/reviewer.md", "presets.json"]);
     assert.ok(doctor.checks.some((check) => check.id === "resources" && check.status === "ok"));

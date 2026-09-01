@@ -14,6 +14,7 @@ npm run check:upstream            # extensions/upstream against the installed Pi
 npm run test:prepare              # a clean copy through npm install --omit=dev and the loader
 npm run test:packages             # real Pi, real catalog packages, isolated scratch environment
 npm run test:git-source -- <ref>  # a pushed ref through Pi's Git transport
+npm run test:lifecycle -- <ref>   # setup, doctor, uninstall against a real Pi
 npm run check                     # the first two, for the edit-run loop
 ```
 
@@ -26,8 +27,16 @@ What each has caught that nothing else would have:
 - **`test:prepare`** — that npm runs `prepare` under `--omit=dev` for Git sources, which is why
   `typescript` is a runtime dependency rather than a dev one.
 - **`test:git-source`** — the transport itself: a pushed ref resolving, installing, and loading
-  with its version intact. It needs a ref that exists on the remote, so CI runs it on pushes to
-  `main` and a release runs it against the tag.
+  with its version intact, and the `files` whitelist carrying everything setup and
+  `pi-subagents` read at runtime.
+- **`test:lifecycle`** — `setup` against a real `pi install`, then `doctor`, then `uninstall`.
+  `setup-scratch.test.ts` runs the same cycle against fake clients and `pi-package-smoke.mjs`
+  never calls setup, so without this the first command a user runs was covered only by
+  simulation.
+
+The last two install Arcwell from `ARCWELL_PACKAGE_SOURCE` rather than from your checkout, so
+they need a ref that exists on the remote. CI runs `test:git-source` on `main` and on tags, and
+`test:lifecycle` on tags.
 
 ## Where a change goes
 

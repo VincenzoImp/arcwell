@@ -50,8 +50,8 @@ export function createSetupPlan(manifest: SetupManifest): SetupPlan {
     {
       id: "resources.arcwell",
       kind: "install-resources",
-      destination: "$PI_CODING_AGENT_DIR/{agents,presets.json}",
-      description: "Install the subagent definitions and presets Pi loads from the agent directory",
+      destination: "$PI_CODING_AGENT_DIR/presets.json",
+      description: "Install the tool postures preset.ts reads from the agent directory",
     },
     {
       id: "config.arcwell",

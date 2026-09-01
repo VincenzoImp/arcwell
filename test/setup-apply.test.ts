@@ -85,7 +85,7 @@ test("apply rejects another ref of the Arcwell Git repository before mutation", 
 test("apply accepts a same-ref semantic Arcwell Git source without installing or owning it", async () => {
   const root = mkdtempSync(join(temporaryRoot, "apply-equivalent-git-"));
   try {
-    const preexisting = "https://github.com/VincenzoImp/arcwell@v0.3.0";
+    const preexisting = "https://github.com/VincenzoImp/arcwell@v0.3.1";
     const client = new FakePiClient([preexisting]);
     client.installed[0]!.installedPath = fixtureInstalledPath(ARCWELL_PACKAGE_SOURCE);
     const ownership = await applySetup(createDefaultManifest(), {
@@ -170,7 +170,7 @@ test("apply health syntax-loads the Arcwell protection extension without registe
     mkdirSync(join(packageRoot, "dist", "extensions"), { recursive: true });
     writeFileSync(join(packageRoot, "package.json"), JSON.stringify({
       name: "arcwell",
-      version: "0.3.0",
+      version: "0.3.1",
       type: "module",
       pi: { extensions: ["./dist/extensions/arcwell-protections.js"] },
     }));
@@ -389,8 +389,7 @@ test("managed resources are installed, recorded, and compensated on failure", as
       managedResources,
     });
 
-    // Pi's manifest has no `agents` key, so this install is the only thing that makes the
-    // subagent definitions reachable at all.
+    // A nested path and a root path, so directory creation and later pruning are both covered.
     assert.equal(readFileSync(join(root, "agents", "scout.md"), "utf8"), managedResources[0]!.content);
     assert.equal(readFileSync(join(root, "presets.json"), "utf8"), managedResources[1]!.content);
     assert.deepEqual(ownership.installedResources.map((entry) => entry.path), ["agents/scout.md", "presets.json"]);

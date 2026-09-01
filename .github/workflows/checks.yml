@@ -44,9 +44,14 @@ jobs:
       - name: Smoke-test prepare build from a clean local copy
         run: npm run test:prepare
 
-      - name: Smoke-test pushed main through the Pi Git source transport
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npm run test:git-source -- main
+      - name: Smoke-test the pushed ref through the Pi Git source transport
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref_type == 'tag')
+        run: npm run test:git-source -- ${{ github.ref_name }}
+
+      # Only on tags: setup installs ARCWELL_PACKAGE_SOURCE, which points at a released tag.
+      - name: Smoke-test the full lifecycle against the pushed tag
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        run: npm run test:lifecycle -- ${{ github.ref_name }}
 
       - name: Smoke-test real Pi packages
         run: npm run test:packages

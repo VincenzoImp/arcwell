@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.3.1
+
+Every version bump rejects the previous manifest, patch releases included: `parseSetupManifest`
+compares `arcwellVersion` exactly. Regenerate with
+`arcwell setup --dry-run --write-manifest arcwell.json`.
+
+### Fixed
+
+- **The dry run described a destination setup does not write.** It announced
+  `$PI_CODING_AGENT_DIR/{agents,presets.json}` and "the subagent definitions and presets", left
+  over from before `pi-subagents` took the agents into the package. For a tool whose contract is
+  that the plan is exact, consent text that names the wrong files is not cosmetic.
+- `test:git-source` asserted that exactly one extension loaded — true when Arcwell shipped one,
+  and stale for six versions. It now checks the whole published payload: every extension, skill,
+  prompt, and the files the `files` whitelist has to carry for setup and `pi-subagents` to work.
+
+### Added
+
+- **`npm run test:lifecycle -- <ref>`** — setup, doctor, resource loading and uninstall against
+  a real Pi with real packages. `setup-scratch.test.ts` ran this cycle against fake clients and
+  `pi-package-smoke.mjs` never called setup, so the first command every user runs had no
+  automated check at all. CI runs it on tag pushes.
+- `test:git-source` also runs on tag pushes, not only on `main`.
+
 ## 0.3.0
 
 Breaking: `modules` gains `subagents` and `goal`, so a 0.2.0 manifest is rejected. Regenerate

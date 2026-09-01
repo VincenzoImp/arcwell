@@ -5,9 +5,9 @@ agreement, fifteen skills, four subagents, prompt chains and a set of extensions
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.3.0 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.3.1 setup --dry-run --write-manifest arcwell.json
 # read arcwell.json and the plan, then:
-npx github:VincenzoImp/arcwell#v0.3.0 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.3.1 setup --manifest arcwell.json --yes
 ```
 
 Three commands: `setup`, `doctor`, `uninstall`. Requires Node `>=24.15.0` and Pi `0.84.4`.
@@ -136,8 +136,9 @@ trust state, pre-existing packages and unrelated bytes are untouched.
 
 ## Status
 
-Not published to npm; installation uses the pinned GitHub ref. A real-package Pi smoke passes
-on macOS; Linux and Windows evidence is pending the checked-in CI jobs, and no cross-platform
-claim follows from the macOS result alone.
+Not published to npm; installation uses the pinned GitHub ref. On macOS, the full cycle —
+install from the tag, `setup`, `doctor`, every resource loading with all seven packages
+present, then `uninstall` — passes against a real Pi. Linux and Windows evidence is pending the
+checked-in CI jobs; no cross-platform claim follows from the macOS result alone.
 
 MIT. `NOTICE` records the redistributed MIT work from Pi's own examples.

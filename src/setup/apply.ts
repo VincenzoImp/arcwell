@@ -54,7 +54,7 @@ export interface ApplySetupDependencies {
   agentDir: string;
   piClient: PiClient;
   workingAgreement: string;
-  /** Whole files installed into the agent directory: subagent definitions and presets. */
+  /** Whole files installed into the agent directory, as opposed to the merged agreement block. */
   managedResources?: readonly ManagedResource[];
   writeRuntimeConfig?: (path: string, config: RuntimeConfig) => void;
 }
