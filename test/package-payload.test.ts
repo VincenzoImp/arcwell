@@ -89,9 +89,14 @@ test("npm pack dry-run contains only the explicit publish payload", () => {
   assert.ok(paths.includes("agents/reviewer.md"));
   assert.ok(paths.includes("prompts/implement.md"));
 
-  // A skill script that arrives without its execute bit fails at the moment the agent
-  // counts on it, and content-only comparison cannot see the difference.
-  for (const script of result.files.filter((file) => file.path.endsWith(".sh"))) {
+  // A skill script that arrives without its execute bit fails at the moment the agent counts
+  // on it, and content-only comparison cannot see the difference. Windows working trees carry
+  // no execute bit for npm pack to read, so a tarball built there would ship the scripts
+  // unexecutable; the bit is asserted where it can exist, and releases are cut on POSIX.
+  const scripts = result.files.filter((file) => file.path.endsWith(".sh"));
+  assert.ok(scripts.length > 0, "The payload carries no skill scripts");
+  for (const script of scripts) {
+    if (process.platform === "win32") continue;
     assert.equal(script.mode & 0o111, 0o111, `${script.path} must stay executable in the payload`);
   }
   assert.ok(paths.includes("README.md"));

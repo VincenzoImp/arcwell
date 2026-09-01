@@ -22,7 +22,7 @@ test("a worklog is created from the template once and reopened afterwards", () =
     const first = handlers.openWorklog("/sessions/project/2026-09-01_abc.jsonl");
     assert.equal(first.created, true);
     assert.equal(first.content, WORKLOG_TEMPLATE);
-    assert.match(first.path, /worklog\/2026-09-01_abc\.md$/);
+    assert.equal(first.path, join(root, "worklog", "2026-09-01_abc.md"));
 
     writeFileSync(first.path, "# Worklog\n\n## Open\n- finish the loop\n");
     const second = handlers.openWorklog("/sessions/project/2026-09-01_abc.jsonl");
@@ -38,7 +38,7 @@ test("each session gets its own worklog and an ephemeral session still gets one"
   try {
     const handlers = createMemoryHandlers(root);
     assert.notEqual(handlers.worklogPath("/a/one.jsonl"), handlers.worklogPath("/a/two.jsonl"));
-    assert.match(handlers.worklogPath(undefined), /worklog\/ephemeral\.md$/);
+    assert.equal(handlers.worklogPath(undefined), join(root, "worklog", "ephemeral.md"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

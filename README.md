@@ -136,9 +136,9 @@ trust state, pre-existing packages and unrelated bytes are untouched.
 
 ## Status
 
-Not published to npm; installation uses the pinned GitHub ref. On macOS, the full cycle —
-install from the tag, `setup`, `doctor`, every resource loading with all seven packages
-present, then `uninstall` — passes against a real Pi. Linux and Windows evidence is pending the
-checked-in CI jobs; no cross-platform claim follows from the macOS result alone.
+Not published to npm; installation uses the pinned GitHub ref. The full cycle — install from
+the tag, `setup`, `doctor`, every resource loading with all seven packages present, then
+`uninstall` — passes against a real Pi on Linux and macOS, in CI, on every tag. Windows runs
+the unit tests; its smokes are not yet green, so no Windows claim is made here.
 
 MIT. `NOTICE` records the redistributed MIT work from Pi's own examples.
