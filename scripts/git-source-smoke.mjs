@@ -33,7 +33,19 @@ const scratchRoot = mkdtempSync(join(temporaryBase, "git-source-smoke-"));
 let scratchCleaned = false;
 function cleanupScratch() {
   if (scratchCleaned) return;
-  rmSync(scratchRoot, { recursive: true, force: true });
+  try {
+    rmSync(scratchRoot, {
+      recursive: true,
+      force: true,
+      maxRetries: process.platform === "win32" ? 20 : 3,
+      retryDelay: 250,
+    });
+  } catch (error) {
+    if (process.platform !== "win32" || error?.code !== "EPERM") throw error;
+    // A successful Git/npm load can leave transient Windows handles behind. CI
+    // workspaces are ephemeral and this scratch environment contains no secrets.
+    console.warn(`Git-source smoke passed; Windows deferred scratch cleanup: ${scratchRoot}`);
+  }
   scratchCleaned = true;
 }
 process.once("exit", cleanupScratch);
