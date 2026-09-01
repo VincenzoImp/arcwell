@@ -60,6 +60,27 @@ and writes bounded non-secret state under
 `$PI_CODING_AGENT_DIR/arcwell/`. When the documented environment variable is unset, Arcwell uses
 Pi's `getAgentDir()` default. It does not edit Pi settings directly.
 
+## What it installs
+
+A working agreement that applies in every project, thirteen skills, four subagents, five
+prompt templates, and eight extensions.
+
+The skills describe a route — grill, research, plan, implement, review, fix — and `/autonomous`
+runs it end to end, repeating review until it comes back clean, bounded at three rounds. The
+route is a map, not rails: every skill opens with the condition under which it does not apply,
+and `/quick` exists because most changes are small. Ceremony out of proportion to the work is
+a defect of its own.
+
+| | |
+|---|---|
+| **Working agreement** | Precedence, evidence, communication, code style, competence gate, discretion. Merged as one marked block into your `AGENTS.md`, never overwriting it. |
+| **Skills** | `scope-check` `code-review` `debug` `web` `grilling` `research` `planning` `tdd` `implementing` `delegating` `verification` `domain-modeling` `handoff`. Only descriptions sit in context; the body loads on demand. |
+| **Subagents** | `scout` `planner` `worker` `reviewer`, installed to `<agentDir>/agents` because Pi's package manifest has no `agents` key. The reviewer reads the diff, never a description of it. |
+| **Prompts** | `/autonomous` `/quick` `/implement` `/implement-and-review` `/scout-and-plan` |
+| **Memory** | A worklog per session that survives compaction: Pi summarises what was said, and cannot touch what was never said. `/lesson` records what is worth not repeating. |
+| **Protections** | An effects guard that fails closed without a UI, and secret-path blocking. Both stay on by default. |
+| **Postures** | `/preset research\|plan\|implement\|review\|fast\|max` withdraw `write`, `edit` and `bash` from the model's schema. |
+
 ## Defaults and selectable modules
 
 The only stable profile is `core`; the default posture is `guarded`.
@@ -69,21 +90,25 @@ The only stable profile is `core`; the default posture is `guarded`.
 | `protections.effects` | On | Confirm recognized remote effects; fail closed without UI |
 | `protections.secrets` | On | Block recognized protected paths/private-key material |
 | `protections.redaction` | On | Select `@spences10/pi-redact@0.0.15` |
-| `modules.lsp` | On | LSP diagnostics |
-| `modules.context` | On | Large-output context sidecar |
-| `modules.todo` | On | Todo overlay |
-| `modules.questionnaire` | On | Structured questions |
-| `modules.planMode` | On | Read-only plan mode |
-| `modules.mcp` | On | Lazy MCP package; Arcwell configures no servers |
-| `modules.web` | Off | Network-capable web package |
-| `modules.subagents` | Off | Child-agent/model package |
-| `modules.autonomousWorkflows` | Off | Package-owned goal workflow |
+| `modules.lsp` | On | `@spences10/pi-lsp@0.0.46` — LSP diagnostics and navigation |
+| `modules.context` | On | `@spences10/pi-context@0.1.16` — large-output sidecar |
+| `modules.mcp` | On | `@spences10/pi-mcp@0.0.60` — lazy MCP; Arcwell configures no servers |
 | `providerGuidance.claudeSubscription` | On | Guidance only; no package or auth operation |
 
-Every protection and module accepts `true` or `false`. `host` is valid only when all protections
-are false. Disabled protections produce setup and doctor warnings. Web and configured MCP tools
-may use network access and configured credentials. Subagents and autonomous workflows invoke
-additional paid model calls when selected and used.
+A module is a switch over an external package, and only four packages remain: each owns a
+capability Arcwell would otherwise have to implement — a whole LSP protocol, retrieval logic
+for oversized output, an MCP client's server lifecycle, and a credential dictionary that ages
+badly when self-written.
+
+Everything else ships inside Arcwell and needs no switch: the todo overlay, structured
+questions, read-only plan mode, the four subagents, six tool postures, tool discipline, and
+the `web` skill. Disable one of those with `pi config`, not with the manifest. Installing the
+packages they replace would register the same tool twice, and Pi then loads neither.
+
+Every protection and module accepts `true` or `false`. `host` is valid only when all
+protections are false. Disabled protections produce setup and doctor warnings. The `web` skill
+and configured MCP servers use network access and configured credentials when invoked;
+subagents invoke additional paid model calls when used.
 
 ## Claude authentication and billing
 
@@ -180,12 +205,18 @@ passed on macOS; Linux and Windows remain open release gates.
 
 ## Explicitly excluded from stable v1
 
-Stable v1 does not provide coding-preference packages, nopeek, confirm-destructive, background
-tasks, dynamic workflow execution, web UI, Git checkpoints, notifications, Herdr, OS-level
-isolation, candidate integration, workspace rollback, Arcwell presets, Full/Custom profiles, an
-Arcwell DAG/scheduler, custom session ledgers, databases, queues, release automation, or CI created
-without an authorized repository. Optional packages may expose their own behavior, but Arcwell
-does not add stronger integration semantics around it.
+Arcwell does not provide coding-preference packages, nopeek, confirm-destructive, background
+tasks, autonomous goal execution, dynamic workflow execution, web UI, Git checkpoints,
+notifications, Herdr, OS-level isolation, candidate integration, workspace rollback,
+Full/Custom profiles, a DAG/scheduler, custom session ledgers, databases, queues, release
+automation, or CI created without an authorized repository. Optional packages may expose their
+own behavior, but Arcwell does not add stronger integration semantics around it.
+
+Autonomous goal execution is excluded deliberately rather than for lack of effort: the
+`/autonomous` loop is instructions the model follows, not a turn-driving engine. A second
+engine competing for control of the turn is what `@narumitw/pi-goal` would have added, and the
+working agreement's rule decides it — machinery is for what must hold whether or not the model
+cooperates, and the model is the thing running this loop.
 
 ## Guardrail limits
 

@@ -22,12 +22,21 @@ confirmation before rendering/writing the selected manifest; non-TTY dry run use
 defaults.
 
 The only profile is `core`. The default posture is `guarded`. Effects, secrets, and redaction
-protections default on and can each be disabled. `host` requires all three to be false. Core module
-defaults are LSP, context sidecar, todo, questionnaire, plan mode, and lazy MCP on; web, subagents,
-and autonomous workflows off. Every module is independently boolean. Wizard output warns that web
-and MCP may use network access and configured credentials, and that subagents and autonomous
-workflows invoke additional paid model calls when selected and used.
+protections default on and can each be disabled. `host` requires all three to be false. The
+modules are LSP, context sidecar, and lazy MCP, all on by default and independently boolean;
+each is a switch over one external package that owns a capability Arcwell does not implement.
+Capabilities Arcwell ships itself — the todo overlay, structured questions, plan mode, the four
+subagents, the tool postures, tool discipline, and the web skill — are not manifest switches
+and are disabled through `pi config`. Wizard output warns that the web skill and configured MCP
+servers use network access and configured credentials when invoked, and that subagents invoke
+additional paid model calls when used.
 `providerGuidance.claudeSubscription` defaults on but creates no package/auth operation.
+
+Setup also installs whole managed files into the agent directory: the four subagent
+definitions under `agents/`, because Pi's package manifest has no `agents` key and the subagent
+extension reads them from there, and `presets.json`. Each is recorded with the digest of what
+was written and whether the path existed first. Uninstall removes only files that still match
+byte-for-byte and that setup created; a modified or pre-existing file is kept and reported.
 
 Setup installs exact Pi package sources, merges only a marked block in
 `$PI_CODING_AGENT_DIR/AGENTS.md`, and writes bounded non-secret config/ownership under
