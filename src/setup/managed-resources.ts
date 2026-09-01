@@ -2,9 +2,10 @@
  * Files Arcwell installs whole into the agent directory, as opposed to the working agreement,
  * which is merged as a marked block into a file the user also owns.
  *
- * Two things need this. Pi's package manifest has no `agents` key, so subagent definitions
- * are only found at `<agentDir>/agents`; and preset.ts reads `<agentDir>/presets.json`. Both
- * are resources the package carries and setup must put on disk for them to exist at all.
+ * preset.ts reads `<agentDir>/presets.json`, so that file has to be on disk for the six tool
+ * postures to exist at all. The subagent definitions were here too until pi-subagents took
+ * over: it discovers agents from an installed package's own manifest, so they ship with the
+ * package instead of being copied.
  *
  * Each record keeps the digest of what Arcwell wrote and whether the path existed first, so
  * uninstall can restore exactly and doctor can tell a modified file from a missing one.
@@ -30,10 +31,6 @@ export interface ManagedResourceRecord {
 
 /** Package-relative sources, paired with where each one lands under the agent directory. */
 export const MANAGED_RESOURCE_SOURCES: ReadonlyArray<{ source: string; path: string }> = [
-  { source: "agents/scout.md", path: "agents/scout.md" },
-  { source: "agents/planner.md", path: "agents/planner.md" },
-  { source: "agents/worker.md", path: "agents/worker.md" },
-  { source: "agents/reviewer.md", path: "agents/reviewer.md" },
   { source: "content/presets.json", path: "presets.json" },
 ];
 

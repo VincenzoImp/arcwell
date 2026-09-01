@@ -142,7 +142,6 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         "extensions/upstream/plan-mode/index.ts",
         "extensions/upstream/preset.ts",
         "extensions/upstream/questionnaire.ts",
-        "extensions/upstream/subagent/index.ts",
         "extensions/upstream/todo.ts",
         "extensions/upstream/tools.ts",
       ],

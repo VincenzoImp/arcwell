@@ -20,6 +20,8 @@ export const PACKAGE_CATALOG: readonly CatalogEntry[] = [
   { id: "pi-lsp", capability: "lsp", source: "npm:@spences10/pi-lsp@0.0.46", defaultEnabled: true, optional: false, conflictsWith: [] },
   { id: "pi-context", capability: "context", source: "npm:@spences10/pi-context@0.1.16", defaultEnabled: true, optional: false, conflictsWith: [] },
   { id: "pi-mcp", capability: "mcp", source: "npm:@spences10/pi-mcp@0.0.60", defaultEnabled: true, optional: false, conflictsWith: [] },
+  { id: "pi-subagents", capability: "subagents", source: "npm:pi-subagents@0.62.0", defaultEnabled: true, optional: false, conflictsWith: [] },
+  { id: "pi-goal", capability: "goal", source: "npm:@narumitw/pi-goal@0.54.4", defaultEnabled: true, optional: false, conflictsWith: [] },
   { id: "pi-redact", capability: "redaction", source: "npm:@spences10/pi-redact@0.0.15", defaultEnabled: true, optional: false, conflictsWith: [] },
 ];
 
@@ -31,7 +33,6 @@ export const INTERNAL_CAPABILITIES = [
   { capability: "todo", supersedes: "npm:@juicesharp/rpiv-todo" },
   { capability: "questionnaire", supersedes: "npm:@juicesharp/rpiv-ask-user-question" },
   { capability: "plan-mode", supersedes: "npm:@narumitw/pi-plan-mode" },
-  { capability: "subagents", supersedes: "npm:pi-subagents" },
   { capability: "web", supersedes: "npm:pi-web-access" },
 ] as const;
 
@@ -41,7 +42,6 @@ export const REJECTED_CAPABILITIES = [
   "confirm-destructive",
   "background-tasks",
   "dynamic-workflows",
-  "autonomous-workflows",
   "web-ui",
   "git-checkpoint",
   "notifications",

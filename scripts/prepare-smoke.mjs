@@ -123,11 +123,11 @@ try {
       ])}`);
     }
     const fromCheckout = (entry) => entry.sourceInfo?.baseDir === checkout;
-    // Two compiled extensions of our own plus the six upstream entry points; the upstream
+    // Two compiled extensions of our own plus the five upstream entry points; the upstream
     // ones ship as TypeScript, so this also proves Pi loads them from a clean --omit=dev
     // install without a build step of their own.
     const expected = [
-      ["extension", extensions.extensions.filter(fromCheckout).length, 8],
+      ["extension", extensions.extensions.filter(fromCheckout).length, 7],
       ["skill", skills.skills.filter(fromCheckout).length, 13],
       ["prompt", prompts.prompts.filter(fromCheckout).length, 5],
     ];

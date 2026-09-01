@@ -26,12 +26,15 @@ const PI_SETTINGS_EXCEPTION = {
   repositoryFragment: "github.com/spences10/my-pi",
 };
 // Only packages that survive alongside Arcwell's own resources. This smoke is what caught
-// rpiv-todo and pi-subagents registering tools Arcwell already registers, which makes Pi
-// load neither: `Tool "todo" conflicts with ...`.
+// rpiv-todo registering a tool Arcwell already registered, which makes Pi load neither:
+// `Tool "todo" conflicts with ...`. pi-subagents is in the catalog because Arcwell no longer
+// ships a subagent engine of its own.
 const EXPECTED_EXTERNAL_EXTENSIONS = new Map([
   ["npm:@spences10/pi-lsp@0.0.46", "dist/index.js"],
   ["npm:@spences10/pi-context@0.1.16", "dist/index.js"],
   ["npm:@spences10/pi-mcp@0.0.60", "dist/index.js"],
+  ["npm:pi-subagents@0.62.0", "index.ts"],
+  ["npm:@narumitw/pi-goal@0.54.4", "dist/index.ts"],
   ["npm:@spences10/pi-redact@0.0.15", "dist/index.js"],
 ]);
 
@@ -261,10 +264,10 @@ async function verifyResources(catalogSources, npmRoot) {
   for (const entry of skillResult.skills) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
   for (const entry of promptResult.prompts) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
 
-  assert(extensionResult.extensions.length === 12,
-    `Expected exactly 12 extensions, found ${extensionResult.extensions.length}`);
-  assert(skillResult.skills.length === 13, `Expected exactly 13 skills, found ${skillResult.skills.length}`);
-  assert(promptResult.prompts.length === 5, `Expected exactly 5 prompts, found ${promptResult.prompts.length}`);
+  assert(extensionResult.extensions.length === 13,
+    `Expected exactly 13 extensions, found ${extensionResult.extensions.length}`);
+  assert(skillResult.skills.length === 15, `Expected exactly 15 skills, found ${skillResult.skills.length}`);
+  assert(promptResult.prompts.length === 11, `Expected exactly 11 prompts, found ${promptResult.prompts.length}`);
 
   const extensionsForSource = (source) => extensionResult.extensions.filter((entry) => entry.sourceInfo.source === source);
   const skillsForSource = (source) => skillResult.skills.filter((entry) => entry.sourceInfo.source === source);
@@ -285,7 +288,6 @@ async function verifyResources(catalogSources, npmRoot) {
     "extensions/upstream/plan-mode/index.ts",
     "extensions/upstream/preset.ts",
     "extensions/upstream/questionnaire.ts",
-    "extensions/upstream/subagent/index.ts",
     "extensions/upstream/todo.ts",
     "extensions/upstream/tools.ts",
   ]), "Arcwell extensions were not discovered exactly from the installed local package");
@@ -303,9 +305,20 @@ async function verifyResources(catalogSources, npmRoot) {
     assert(extensions.some((entry) => entry.sourceInfo.baseDir && normalizeRelative(entry.sourceInfo.baseDir, entry.resolvedPath) === expectedPath),
       `${source} extension ${expectedPath} was not discovered`);
   }
-  // The remaining catalog packages contribute extensions only. Arcwell owns every skill and
-  // prompt in the environment, which is what makes the counts above exact.
+  // pi-subagents ships skills and prompts of its own; every other catalog package is
+  // extensions-only. None of its names may collide with Arcwell's, because Pi keeps the first
+  // skill it finds for a name and silently drops the rest.
+  const subagentsSource = "npm:pi-subagents@0.62.0";
+  const arcwellSkillNames = new Set(arcwellSkills.map((entry) => entry.name));
+  for (const skill of skillsForSource(subagentsSource)) {
+    assert(!arcwellSkillNames.has(skill.name), `pi-subagents skill ${skill.name} collides with an Arcwell skill`);
+  }
+  const arcwellPromptNames = new Set(arcwellPrompts.map((entry) => entry.name));
+  for (const prompt of promptsForSource(subagentsSource)) {
+    assert(!arcwellPromptNames.has(prompt.name), `pi-subagents prompt ${prompt.name} collides with an Arcwell prompt`);
+  }
   for (const source of catalogSources) {
+    if (source === subagentsSource) continue;
     assert(skillsForSource(source).length === 0,
       `${source} contributed ${skillsForSource(source).length} skills; the catalog is extensions-only`);
     assert(promptsForSource(source).length === 0,

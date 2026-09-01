@@ -19,7 +19,7 @@ const exactManifest = {
   posture: "guarded",
   protections: { effects: true, secrets: true, redaction: true },
   providerGuidance: { claudeSubscription: true },
-  modules: { lsp: true, context: true, mcp: true },
+  modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true, memory: true },
 };
 
 test("default setup manifest is the approved portable manifest", () => {
@@ -61,7 +61,7 @@ test("removed module keys and provider selection are rejected", () => {
   // describing a system that no longer exists, so it fails rather than being ignored.
   for (const name of [
     "codingPreferences", "backgroundTasks", "webUi", "gitCheckpoint", "notifications",
-    "todo", "questionnaire", "planMode", "web", "subagents", "autonomousWorkflows",
+    "todo", "questionnaire", "planMode", "web", "autonomousWorkflows",
   ]) {
     const manifest = structuredClone(exactManifest) as typeof exactManifest & { modules: Record<string, boolean> };
     manifest.modules[name] = false;

@@ -218,8 +218,10 @@ export async function runDoctor(
     }
 
     for (const moduleName of moduleNames) {
-      const entry = PACKAGE_CATALOG.find((candidate) => candidate.capability === moduleName)!;
-      if (!ownership?.selectedPackageSources.includes(entry.source)) continue;
+      // Not every module owns an external package: `memory` is Arcwell's own extension, gated
+      // by the manifest but installed with the package rather than from the catalog.
+      const entry = PACKAGE_CATALOG.find((candidate) => candidate.capability === moduleName);
+      if (!entry || !ownership?.selectedPackageSources.includes(entry.source)) continue;
       checks.push(effectivePackage(entry.source)
         ? { id: `module.${moduleName}`, status: "ok", message: `Module ${moduleName} is effectively enabled` }
         : { id: `module.${moduleName}`, status: "error", message: `Selected module ${moduleName} is missing or filtered` });

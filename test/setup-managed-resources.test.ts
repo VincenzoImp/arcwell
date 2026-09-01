@@ -27,12 +27,10 @@ test("the package ships every source the manifest declares as managed", () => {
     assert.ok(existsSync(join(packageRoot, source)), `${source} must exist in the package`);
   }
   const loaded = loadManagedResources(packageRoot);
-  assert.deepEqual(loaded.map((entry) => entry.path).sort(), [
-    "agents/planner.md", "agents/reviewer.md", "agents/scout.md", "agents/worker.md", "presets.json",
-  ]);
-  // Subagent definitions are only found at <agentDir>/agents, so this is the path that makes
-  // the subagent extension work at all.
-  assert.match(loaded.find((entry) => entry.path === "agents/scout.md")?.content ?? "", /name:\s*scout/);
+  assert.deepEqual(loaded.map((entry) => entry.path), ["presets.json"]);
+  // pi-subagents discovers the agent definitions from the package manifest, so they are no
+  // longer copied onto disk; presets.json still has to be there for /preset to work.
+  assert.match(loaded[0]?.content ?? "", /research|plan|implement/);
 });
 
 test("install records a digest and whether the path was already there", () => {

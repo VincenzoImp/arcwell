@@ -49,7 +49,6 @@ test("package manifest declares the exact native Pi resource set", () => {
     extensions: [
       "./dist/extensions/arcwell-protections.js",
       "./dist/extensions/arcwell-memory.js",
-      "./extensions/upstream/subagent/index.ts",
       "./extensions/upstream/plan-mode/index.ts",
       "./extensions/upstream/preset.ts",
       "./extensions/upstream/questionnaire.ts",
@@ -140,7 +139,6 @@ test("DefaultResourceLoader discovers only package resources without project lea
         "extensions/upstream/plan-mode/index.ts",
         "extensions/upstream/preset.ts",
         "extensions/upstream/questionnaire.ts",
-        "extensions/upstream/subagent/index.ts",
         "extensions/upstream/todo.ts",
         "extensions/upstream/tools.ts",
       ],

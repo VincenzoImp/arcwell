@@ -7,8 +7,11 @@ import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { createSetupPlan } from "../src/setup/plan.js";
 import { moduleNames, protectionNames } from "../src/setup/types.js";
 
-const sourceFor = (capability: string): string =>
-  PACKAGE_CATALOG.find((entry) => entry.capability === capability)?.source ?? "__missing__";
+const sourceFor = (capability: string): string | undefined =>
+  PACKAGE_CATALOG.find((entry) => entry.capability === capability)?.source;
+
+/** Modules backed by an external package. `memory` gates an extension Arcwell ships itself. */
+const packagedModules = moduleNames.filter((name) => sourceFor(name) !== undefined);
 
 test("dry-run plan is deterministic, portable, and contains exact selected package sources", () => {
   const manifest = createDefaultManifest();
@@ -19,9 +22,11 @@ test("dry-run plan is deterministic, portable, and contains exact selected packa
     [
       ARCWELL_PACKAGE_SOURCE,
       "npm:@spences10/pi-context@0.1.16",
+      "npm:@narumitw/pi-goal@0.54.4",
       "npm:@spences10/pi-lsp@0.0.46",
       "npm:@spences10/pi-mcp@0.0.60",
       "npm:@spences10/pi-redact@0.0.15",
+      "npm:pi-subagents@0.62.0",
     ],
   );
   assert.equal(first.operations.some((operation) => operation.destination === "$PI_CODING_AGENT_DIR/AGENTS.md"), true);
@@ -52,8 +57,8 @@ test("package composition omits every disabled default and every unselected opti
     .map((operation) => operation.source);
   assert.deepEqual(disabledPackageSources, [ARCWELL_PACKAGE_SOURCE, sourceFor("redaction")]);
 
-  for (const moduleName of moduleNames) {
-    const source = sourceFor(moduleName);
+  for (const moduleName of packagedModules) {
+    const source = sourceFor(moduleName)!;
     const defaultPlan = createSetupPlan(defaults);
     assert.equal(
       defaultPlan.operations.some((operation) => operation.source === source),

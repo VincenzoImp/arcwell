@@ -12,6 +12,8 @@ const expectedCatalog = [
   ["lsp", "npm:@spences10/pi-lsp@0.0.46", true],
   ["context", "npm:@spences10/pi-context@0.1.16", true],
   ["mcp", "npm:@spences10/pi-mcp@0.0.60", true],
+  ["subagents", "npm:pi-subagents@0.62.0", true],
+  ["goal", "npm:@narumitw/pi-goal@0.54.4", true],
   ["redaction", "npm:@spences10/pi-redact@0.0.15", true],
 ] as const;
 
@@ -46,7 +48,6 @@ test("overlapping and rejected policy or workflow packages stay out of the catal
     "confirm-destructive",
     "background-tasks",
     "dynamic-workflows",
-    "autonomous-workflows",
     "web-ui",
     "git-checkpoint",
     "notifications",
@@ -59,7 +60,6 @@ test("overlapping and rejected policy or workflow packages stay out of the catal
     "pi-background-tasks",
     "pi-dynamic-workflows",
     "pi-web-ui",
-    "pi-goal",
   ]) assert.equal(serialized.includes(rejected), false);
 });
 
@@ -73,6 +73,6 @@ test("a package Arcwell supersedes never reappears in the catalog", () => {
   }
   assert.deepEqual(
     INTERNAL_CAPABILITIES.map((entry) => entry.capability),
-    ["todo", "questionnaire", "plan-mode", "subagents", "web"],
+    ["todo", "questionnaire", "plan-mode", "web"],
   );
 });

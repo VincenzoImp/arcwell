@@ -1,9 +1,12 @@
 export const protectionNames = ["effects", "secrets", "redaction"] as const;
 
-// Only capabilities that a separate package owns. Todo, questionnaire, plan mode, subagents
-// and web ship inside Arcwell now, so they are not switches over an external package: use
-// `pi config` to disable one of Arcwell's own resources.
-export const moduleNames = ["lsp", "context", "mcp"] as const;
+/**
+ * A capability earns a manifest switch when turning it off is a decision with consequences:
+ * it spawns processes, spends money, or writes to disk every session. Todo, questionnaire,
+ * plan mode and the web skill ship inside Arcwell and are disabled with `pi config`, which
+ * already handles every skill, prompt and extension individually.
+ */
+export const moduleNames = ["lsp", "context", "mcp", "subagents", "goal", "memory"] as const;
 
 export type ProtectionName = (typeof protectionNames)[number];
 export type ModuleName = (typeof moduleNames)[number];
