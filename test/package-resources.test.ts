@@ -47,6 +47,7 @@ test("package manifest declares the exact native Pi resource set", () => {
   assert.deepEqual(pkg.pi, {
     extensions: [
       "./dist/extensions/arcwell-protections.js",
+      "./dist/extensions/arcwell-memory.js",
       "./extensions/upstream/subagent/index.ts",
       "./extensions/upstream/plan-mode/index.ts",
       "./extensions/upstream/preset.ts",
@@ -127,6 +128,7 @@ test("DefaultResourceLoader discovers only package resources without project lea
         .map((entry) => relative(process.cwd(), entry.resolvedPath).replaceAll("\\", "/"))
         .sort(),
       [
+        "dist/extensions/arcwell-memory.js",
         "dist/extensions/arcwell-protections.js",
         "extensions/upstream/plan-mode/index.ts",
         "extensions/upstream/preset.ts",

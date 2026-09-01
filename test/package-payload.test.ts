@@ -67,7 +67,7 @@ function allowedPayloadPath(path: string): boolean {
     /^prompts\/(?:implement|implement-and-review|scout-and-plan)\.md$/,
     /^extensions\/upstream\/(?:[a-z-]+\/)?[a-z-]+\.ts$/,
     /^dist\/src\/.*\.js$/,
-    /^dist\/extensions\/(?:arcwell-protections|effects)\.js$/,
+    /^dist\/extensions\/(?:arcwell-memory|arcwell-protections|effects)\.js$/,
   ].some((pattern) => pattern.test(path));
 }
 
@@ -136,6 +136,7 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         .map((entry) => relative(packageRoot, entry.resolvedPath).replaceAll("\\", "/"))
         .sort(),
       [
+        "dist/extensions/arcwell-memory.js",
         "dist/extensions/arcwell-protections.js",
         "extensions/upstream/plan-mode/index.ts",
         "extensions/upstream/preset.ts",

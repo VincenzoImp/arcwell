@@ -28,6 +28,7 @@
   "pi": {
     "extensions": [
       "./dist/extensions/arcwell-protections.js",
+      "./dist/extensions/arcwell-memory.js",
       "./extensions/upstream/subagent/index.ts",
       "./extensions/upstream/plan-mode/index.ts",
       "./extensions/upstream/preset.ts",
