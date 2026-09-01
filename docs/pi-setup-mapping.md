@@ -65,9 +65,10 @@ adapter will be built for stable v1.
 
 ## Package, recovery, and release gate
 
-After separately authorized publication, exact bootstrap is
-`npm install --global arcwell@0.1.0`; avoid `latest` and ephemeral `npx`. Npm/Pi packages run code
-with user permissions, so inspect and pin tarball integrity, `package.json`, dependencies, native
+Arcwell is not published to npm. Exact bootstrap is
+`npx github:VincenzoImp/arcwell#v0.1.0 setup`, and direct Pi resource installation is
+`pi install git:github.com/VincenzoImp/arcwell@v0.1.0`. Npm/Pi packages run code with user
+permissions, so inspect and pin source/artifact integrity, `package.json`, dependencies, native
 resources, `LICENSE`, and `NOTICE`. Local audit is
 `npm pack --dry-run --json --cache .npm-cache`. The whitelist includes compiled CLI/extension,
 content, exact native skills/prompts, docs, license, and notice; it excludes tests, temp/cache/home

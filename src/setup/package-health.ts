@@ -3,15 +3,10 @@ import { lstatSync, readFileSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { ARCWELL_VERSION } from "./manifest.js";
 import type { PiPackage } from "./pi-client.js";
 
 const ARCWELL_EXTENSION_PATH = join("dist", "extensions", "arcwell-protections.js");
-
-function expectedNpmIdentity(source: string): { name: string; version: string } {
-  const match = /^npm:((?:@[^/@]+\/)?[^/@]+)@(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)$/.exec(source);
-  if (!match?.[1] || !match[2]) throw new Error("Arcwell package source is not an exact npm source");
-  return { name: match[1], version: match[2] };
-}
 
 function assertRegularFile(path: string, label: string): void {
   try {
@@ -23,9 +18,7 @@ function assertRegularFile(path: string, label: string): void {
 
 export async function assertArcwellPackageHealthy(
   installedPackage: PiPackage,
-  expectedSource: string,
 ): Promise<void> {
-  const expected = expectedNpmIdentity(expectedSource);
   try {
     if (!lstatSync(installedPackage.installedPath).isDirectory()) throw new Error("not directory");
   } catch {
@@ -44,10 +37,10 @@ export async function assertArcwellPackageHealthy(
     !metadata
     || typeof metadata !== "object"
     || Array.isArray(metadata)
-    || (metadata as Record<string, unknown>).name !== expected.name
-    || (metadata as Record<string, unknown>).version !== expected.version
+    || (metadata as Record<string, unknown>).name !== "arcwell"
+    || (metadata as Record<string, unknown>).version !== ARCWELL_VERSION
   ) {
-    throw new Error("Arcwell package package.json name/version does not match the selected source");
+    throw new Error("Arcwell package package.json name/version does not match Arcwell");
   }
   const manifest = (metadata as Record<string, unknown>).pi;
   const extensions = manifest && typeof manifest === "object" && !Array.isArray(manifest)

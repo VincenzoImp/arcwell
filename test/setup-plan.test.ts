@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { PACKAGE_CATALOG } from "../src/setup/catalog.js";
 import { createDefaultManifest } from "../src/setup/manifest.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { createSetupPlan } from "../src/setup/plan.js";
 import { moduleNames, protectionNames } from "../src/setup/types.js";
 
@@ -16,7 +17,7 @@ test("dry-run plan is deterministic, portable, and contains exact selected packa
   assert.deepEqual(
     first.operations.filter((operation) => operation.kind === "install-package").map((operation) => operation.source),
     [
-      "npm:arcwell@0.1.0",
+      ARCWELL_PACKAGE_SOURCE,
       "npm:@spences10/pi-context@0.1.16",
       "npm:@spences10/pi-lsp@0.0.46",
       "npm:@spences10/pi-mcp@0.0.60",
@@ -52,7 +53,7 @@ test("package composition omits every disabled default and every unselected opti
   const disabledPackageSources = createSetupPlan(allDisabled).operations
     .filter((operation) => operation.kind === "install-package")
     .map((operation) => operation.source);
-  assert.deepEqual(disabledPackageSources, ["npm:arcwell@0.1.0", sourceFor("redaction")]);
+  assert.deepEqual(disabledPackageSources, [ARCWELL_PACKAGE_SOURCE, sourceFor("redaction")]);
 
   for (const moduleName of moduleNames) {
     const source = sourceFor(moduleName);

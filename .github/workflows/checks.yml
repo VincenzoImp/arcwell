@@ -38,6 +38,13 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Smoke-test prepare build from a clean local copy
+        run: npm run test:prepare
+
+      - name: Smoke-test pushed main through the Pi Git source transport
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npm run test:git-source -- main
+
       - name: Smoke-test real Pi packages
         run: npm run test:packages
 

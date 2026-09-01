@@ -8,6 +8,7 @@ import test from "node:test";
 import { handleSetupCommand } from "../src/setup/cli.js";
 import { handleDoctorCommand } from "../src/setup/doctor.js";
 import { createDefaultManifest, parseManifestJson } from "../src/setup/manifest.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { handleUninstallCommand } from "../src/setup/uninstall.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -42,7 +43,7 @@ test("setup --dry-run is deterministic and writes nothing", () => {
     const first = execFileSync(process.execPath, [cli, "setup", "--dry-run"], { cwd: root, encoding: "utf8", env });
     const second = execFileSync(process.execPath, [cli, "setup", "--dry-run"], { cwd: root, encoding: "utf8", env });
     assert.equal(first, second);
-    assert.match(first, /npm:arcwell@0\.1\.0/);
+    assert.ok(first.includes(ARCWELL_PACKAGE_SOURCE));
     assert.match(first, /\$PI_CODING_AGENT_DIR\/arcwell\/config\.json/);
     assert.deepEqual(readdirSync(root), before);
     assert.deepEqual(readdirSync(home), []);
@@ -177,7 +178,7 @@ test("interactive setup never applies before the rendered plan is explicitly con
       question: async (prompt) => {
         if (/Apply this exact plan/i.test(prompt)) {
           assert.equal(applied, false);
-          assert.match(output.join(""), /npm:arcwell@0\.1\.0/);
+          assert.ok(output.join("").includes(ARCWELL_PACKAGE_SOURCE));
         }
         return answers.shift();
       },
@@ -253,7 +254,7 @@ test("non-TTY uninstall requires --yes before injected mutation", async () => {
     stderr: () => undefined,
   }, {
     isTTY: false,
-    run: async () => ({ removedPackageSources: ["npm:arcwell@0.1.0"] }),
+    run: async () => ({ removedPackageSources: [ARCWELL_PACKAGE_SOURCE] }),
   }), 0);
   assert.match(output.join(""), /uninstall complete/);
 });

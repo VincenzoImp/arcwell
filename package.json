@@ -41,21 +41,24 @@
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "prepack": "npm --silent run build",
     "test": "npm run build && node --import ./dist/test/bootstrap.js --test \"dist/test/*.test.js\"",
     "test:model": "npm run build && node --test --test-concurrency=1 dist/test/model-smoke.test.js dist/test/worker-model-smoke.test.js",
     "test:packages": "npm run build && node scripts/pi-package-smoke.mjs",
+    "test:prepare": "node scripts/prepare-smoke.mjs",
+    "test:git-source": "node scripts/git-source-smoke.mjs",
     "check": "npm test"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "0.84.4",
     "@earendil-works/pi-coding-agent": "0.84.4",
-    "typebox": "1.3.7"
+    "@types/node": "26.4.0",
+    "ajv": "8.20.0",
+    "typebox": "1.3.7",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@types/node": "26.4.0",
-    "ajv": "8.17.1",
-    "typescript": "6.0.3",
     "typescript-language-server": "6.0.0"
   }
 }

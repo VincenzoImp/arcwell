@@ -9,6 +9,11 @@ import { assertNoSymbolicLinkComponents, parseRuntimeConfigJson } from "./config
 import { ARCWELL_VERSION } from "./manifest.js";
 import { readOwnership, type ArcwellOwnership } from "./ownership.js";
 import { assertArcwellPackageHealthy } from "./package-health.js";
+import {
+  ARCWELL_PACKAGE_SOURCE,
+  packageSourceIdentity,
+  packageSourcesEquivalent,
+} from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
 import { moduleNames, protectionNames, type RuntimeConfig } from "./types.js";
 import { managedWorkingAgreementDigest } from "./working-agreement.js";
@@ -45,8 +50,7 @@ export interface DoctorCommandDependencies {
 const CONFIG_LOGICAL_PATH = "$PI_CODING_AGENT_DIR/arcwell/config.json";
 const OWNERSHIP_LOGICAL_PATH = "$PI_CODING_AGENT_DIR/arcwell/ownership.json";
 const AGREEMENT_LOGICAL_PATH = "$PI_CODING_AGENT_DIR/AGENTS.md";
-const arcwellSource = `npm:arcwell@${ARCWELL_VERSION}`;
-const knownOwnedSources = new Set([arcwellSource, ...PACKAGE_CATALOG.map((entry) => entry.source)]);
+const knownOwnedSources = new Set([ARCWELL_PACKAGE_SOURCE, ...PACKAGE_CATALOG.map((entry) => entry.source)]);
 
 function readRegularText(path: string): string {
   assertNoSymbolicLinkComponents(path);
@@ -61,23 +65,19 @@ function normalizedPiVersion(output: string): string | undefined {
   return match?.[1];
 }
 
-function npmPackageIdentity(source: string): string | undefined {
-  if (!source.startsWith("npm:")) return undefined;
-  const match = /^(@?[^@]+(?:\/[^@]+)?)(?:@.+)?$/.exec(source.slice(4));
-  return match?.[1];
-}
-
 function sourceCheckId(source: string): string {
-  if (source === arcwellSource) return "package.arcwell";
+  if (source === ARCWELL_PACKAGE_SOURCE) return "package.arcwell";
   const entry = PACKAGE_CATALOG.find((candidate) => candidate.source === source);
   return `package.${entry?.capability ?? "unknown"}`;
 }
 
 function packageError(source: string, installed: readonly PiPackage[]): string {
-  const exact = installed.find((item) => item.scope === "user" && item.source === source);
-  if (exact?.filtered) return `Required user package ${source} is filtered`;
-  const identity = npmPackageIdentity(source);
-  const conflict = identity && installed.find((item) => item.scope === "user" && npmPackageIdentity(item.source) === identity);
+  const equivalent = installed.find((item) =>
+    item.scope === "user" && packageSourcesEquivalent(item.source, source));
+  if (equivalent?.filtered) return `Required user package ${source} is filtered`;
+  const identity = packageSourceIdentity(source);
+  const conflict = identity && installed.find((item) =>
+    item.scope === "user" && packageSourceIdentity(item.source) === identity);
   return conflict
     ? `Required user package ${source} has a version conflict`
     : `Required user package ${source} is missing`;
@@ -139,7 +139,7 @@ export async function runDoctor(
     if (
       ownership.arcwellVersion !== ARCWELL_VERSION
       || unknownSource
-      || !ownership.selectedPackageSources.includes(arcwellSource)
+      || !ownership.selectedPackageSources.includes(ARCWELL_PACKAGE_SOURCE)
     ) throw new Error("inconsistent");
     checks.push({ id: "ownership", status: "ok", message: "Ownership is strict and consistent", path: OWNERSHIP_LOGICAL_PATH });
   } catch {
@@ -157,21 +157,22 @@ export async function runDoctor(
 
   if (installed) {
     const effectiveUserPackages = installed.filter((item) => item.scope === "user" && !item.filtered);
-    const effectiveUserSources = new Set(effectiveUserPackages.map((item) => item.source));
-    const requiredSources = new Set([arcwellSource, ...(ownership?.selectedPackageSources ?? [])]);
+    const effectivePackage = (source: string): PiPackage | undefined => effectiveUserPackages.find((item) =>
+      packageSourcesEquivalent(item.source, source));
+    const requiredSources = new Set([ARCWELL_PACKAGE_SOURCE, ...(ownership?.selectedPackageSources ?? [])]);
     if (config?.protections.redaction) {
       requiredSources.add(PACKAGE_CATALOG.find((entry) => entry.capability === "redaction")!.source);
     }
     let arcwellPackageHealthy = false;
     for (const source of [...requiredSources].sort()) {
-      const effectivePackage = effectiveUserPackages.find((item) => item.source === source);
-      if (!effectivePackage) {
+      const installedPackage = effectivePackage(source);
+      if (!installedPackage) {
         checks.push({ id: sourceCheckId(source), status: "error", message: packageError(source, installed) });
         continue;
       }
-      if (source === arcwellSource) {
+      if (source === ARCWELL_PACKAGE_SOURCE) {
         try {
-          await assertArcwellPackageHealthy(effectivePackage, arcwellSource);
+          await assertArcwellPackageHealthy(installedPackage);
           arcwellPackageHealthy = true;
           checks.push({ id: "package.arcwell", status: "ok", message: `Required user package ${source} is present and loadable` });
         } catch (error) {
@@ -184,12 +185,12 @@ export async function runDoctor(
     }
 
     if (ownership) {
-      const selectedIdentities = new Set(ownership.selectedPackageSources.map(npmPackageIdentity));
+      const selectedIdentities = new Set(ownership.selectedPackageSources.map(packageSourceIdentity));
       const globalUserPackages = installed.filter((item) => item.scope === "user");
       for (const entry of PACKAGE_CATALOG) {
-        const identity = npmPackageIdentity(entry.source);
+        const identity = packageSourceIdentity(entry.source);
         if (!identity || selectedIdentities.has(identity)) continue;
-        const unowned = globalUserPackages.find((item) => npmPackageIdentity(item.source) === identity);
+        const unowned = globalUserPackages.find((item) => packageSourceIdentity(item.source) === identity);
         if (unowned && !ownership.installedPackageSources.includes(unowned.source)) {
           checks.push({
             id: `package.unowned.${entry.capability}`,
@@ -203,7 +204,7 @@ export async function runDoctor(
     for (const moduleName of moduleNames) {
       const entry = PACKAGE_CATALOG.find((candidate) => candidate.capability === moduleName)!;
       if (!ownership?.selectedPackageSources.includes(entry.source)) continue;
-      checks.push(effectiveUserSources.has(entry.source)
+      checks.push(effectivePackage(entry.source)
         ? { id: `module.${moduleName}`, status: "ok", message: `Module ${moduleName} is effectively enabled` }
         : { id: `module.${moduleName}`, status: "error", message: `Selected module ${moduleName} is missing or filtered` });
     }
@@ -220,7 +221,7 @@ export async function runDoctor(
           continue;
         }
         const redactionSource = PACKAGE_CATALOG.find((entry) => entry.capability === "redaction")!.source;
-        const packagePresent = effectiveUserSources.has(redactionSource);
+        const packagePresent = effectivePackage(redactionSource) !== undefined;
         checks.push(config.protections.redaction && packagePresent
           ? { id: "protection.redaction", status: "ok", message: "Protection redaction is effectively enabled" }
           : !config.protections.redaction && !packagePresent

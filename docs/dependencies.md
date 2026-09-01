@@ -4,7 +4,7 @@
 
 This records the approved Task 0 catalog for Arcwell 0.1.0 and Pi 0.84.4. Local verification covers Pi's public package/resource/filter/hook APIs and catalog invariants. Exact npm registry metadata was fetched for every accepted pin: all ten report MIT licenses, Pi resource manifests, repository provenance, integrity digests, and no direct `preinstall`, `install`, or `postinstall` script. The `@spences10/*` packages require Node `>=24.15.0`, which is therefore Arcwell's minimum.
 
-A fresh real-package smoke passed on macOS with Node 26.4.0 and npm 11.17.0. It invoked the repository-local Pi 0.84.4 CLI, installed Arcwell's local path and all ten exact accepted sources into an isolated repository-local scratch environment, reloaded them with `SettingsManager` and `DefaultResourceLoader`, and found 11 extensions, 4 skills, and 9 prompts without extension or resource diagnostics. It recursively inspected the local Arcwell manifest and 157 installed dependency/package manifests, found MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, and ISC metadata, found no `preinstall`, `install`, or `postinstall` declarations, and completed production `npm audit --omit=dev` checks for both the repository and isolated Pi npm root with zero vulnerabilities. The scratch directory was removed after the run.
+A fresh real-package smoke passed on macOS with Node 26.4.0 and npm 11.17.0. It invoked the repository-local Pi 0.84.4 CLI, installed Arcwell's local path and all ten exact accepted sources into an isolated repository-local scratch environment, reloaded them with `SettingsManager` and `DefaultResourceLoader`, and found 11 extensions, 4 skills, and 9 prompts without extension or resource diagnostics. It recursively inspected the local Arcwell manifest and 158 installed dependency/package manifests, found MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, and ISC metadata, found no `preinstall`, `install`, or `postinstall` declarations, and completed production `npm audit --omit=dev` checks for both the repository and isolated Pi npm root with zero vulnerabilities. The scratch directory was removed after the run.
 
 Every accepted source is an exact `npm:` source, has one capability owner, is removable by source identity, and is omitted when its manifest switch is false. Arcwell does not vendor or duplicate package classifiers.
 
@@ -45,6 +45,8 @@ Arcwell targets Node `>=24.15.0` and the locally audited Pi 0.84.4 API. The pack
 
 Pi package guidance normally puts bundled Pi APIs in `peerDependencies`. Arcwell deliberately keeps `@earendil-works/pi-ai`, `@earendil-works/pi-coding-agent`, and `typebox` as exact runtime dependencies because the same package also ships the standalone `arcwell` CLI, whose experimental commands import and execute those APIs outside a Pi host. This is a hybrid package exception, not peer-only guidance being overlooked; splitting the CLI and Pi resources into separate packages is deferred until it can preserve standalone CLI behavior.
 
+Git installation is also a build-time exception: npm runs Arcwell's `prepare: npm run build` even under Pi's production-only `npm install --omit=dev`. Because the current TypeScript project compiles `src` and `test`, exact `typescript@6.0.3`, `@types/node@26.4.0`, and `ajv@8.20.0` pins are production dependencies required by that compile. `typescript-language-server@6.0.0` is not needed by the build and remains development-only.
+
 ## Package payload and installation security
 
 Arcwell requires Node.js `>=24.15.0`. Its npm metadata uses an explicit files whitelist: compiled
@@ -57,8 +59,25 @@ and Pi packages retain their own licenses and notices and are not bundled into t
 `npm pack --dry-run --json --cache .npm-cache` is the canonical local payload audit. Tests also
 create a temporary package, extract it under repository-local `.tmp-tests`, and use
 `DefaultResourceLoader` from that stable directory without changing Pi settings or invoking a
-model. Exact release bootstrap, only after authorized publication, is
-`npm install --global arcwell@0.1.0`; setup then requests exact `npm:` sources through Pi.
+model. The prepare regression copies the working tree without Git metadata or build/install output,
+uses an isolated home and empty npm cache, runs `npm install --omit=dev`, verifies the generated
+`dist`, CLI bin, and extension, and then discovers the package resources with the checkout's
+installed `DefaultResourceLoader`. This is prepare-build evidence, not Git transport evidence. The
+explicit networked `npm run test:git-source -- <ref>` smoke invokes repository-local Pi 0.84.4 to
+install the remote source in credential-isolated scratch state. Use `main` after a main push for
+transport evidence and a pushed version tag for release-tag evidence; neither substitutes for the
+other.
+Arcwell is not published to npm. Exact bootstrap is
+`npx github:VincenzoImp/arcwell#v0.1.0 setup`; setup requests Arcwell's exact Git source and exact
+third-party `npm:` sources through Pi. Equivalent HTTPS, `git:https://`, SSH URL, and prefixed
+`git:git@github.com:` forms of the Arcwell repository at `v0.1.0` satisfy setup and doctor without
+being claimed as Arcwell-installed; `www.github.com` normalizes to `github.com`, while raw
+`git@github.com:...` without `git:` is local to Pi and is not equivalent. A different ref fails
+before mutation. Arcwell's disclosed
+`prepare: npm run build` compiles a Git checkout before use. Uninstall removes only an exact source
+recorded as owned and refuses changed, additional, or duplicate same-identity user entries before
+invoking Pi's identity-wide package removal, including exact source-string duplicates represented
+by both string and filtered-object settings entries.
 
 Npm and Pi packages execute code with the user's permissions. A release consumer must inspect and
 pin tarball integrity, native resources, the dependency tree, and third-party licenses/notices.

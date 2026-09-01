@@ -5,14 +5,15 @@ import test from "node:test";
 
 import { applySetup } from "../src/setup/apply.js";
 import { createDefaultManifest } from "../src/setup/manifest.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { createSetupPlan } from "../src/setup/plan.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
-import { fixturePiPackage } from "./setup-package-fixture.js";
+import { fixtureInstalledPath, fixturePiPackage } from "./setup-package-fixture.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 const agreement = "<!-- arcwell:start -->\nArcwell rules\n<!-- arcwell:end -->\n";
-const arcwellSource = "npm:arcwell@0.1.0";
+const arcwellSource = ARCWELL_PACKAGE_SOURCE;
 const webSource = "npm:pi-web-access@0.27.0";
 
 function desiredSources(manifest = createDefaultManifest()): string[] {
@@ -58,19 +59,39 @@ test("apply preflights npm identity conflicts before mutation", async () => {
   }
 });
 
-test("apply mirrors Pi npm alias identity and fails before mutation", async () => {
-  const root = mkdtempSync(join(temporaryRoot, "apply-alias-conflict-"));
+test("apply rejects another ref of the Arcwell Git repository before mutation", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "apply-git-ref-conflict-"));
   try {
-    const client = new FakePiClient(["npm:arcwell@npm:other@1.0.0"]);
+    const client = new FakePiClient(["git:https://github.com/VincenzoImp/arcwell@main"]);
     await assert.rejects(applySetup(createDefaultManifest(), {
       agentDir: root,
       piClient: client,
       workingAgreement: agreement,
-    }), /package identity conflict for arcwell/);
+    }), /package identity conflict.*github\.com\/VincenzoImp\/arcwell/);
     assert.deepEqual(client.installs, []);
     assert.deepEqual(client.removals, []);
     assert.equal(existsSync(join(root, "AGENTS.md")), false);
     assert.equal(existsSync(join(root, "arcwell")), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("apply accepts a same-ref semantic Arcwell Git source without installing or owning it", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "apply-equivalent-git-"));
+  try {
+    const preexisting = "https://github.com/VincenzoImp/arcwell@v0.1.0";
+    const client = new FakePiClient([preexisting]);
+    client.installed[0]!.installedPath = fixtureInstalledPath(ARCWELL_PACKAGE_SOURCE);
+    const ownership = await applySetup(createDefaultManifest(), {
+      agentDir: root,
+      piClient: client,
+      workingAgreement: agreement,
+    });
+    assert.equal(client.installs.includes(ARCWELL_PACKAGE_SOURCE), false);
+    assert.equal(ownership.installedPackageSources.includes(ARCWELL_PACKAGE_SOURCE), false);
+    assert.equal(ownership.installedPackageSources.includes(preexisting), false);
+    assert.deepEqual(client.removals, []);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -178,7 +199,7 @@ test("apply removes a package when Pi persists it before reporting install failu
       workingAgreement: agreement,
     }), /Pi failed after persistence/);
     assert.deepEqual(client.installed, []);
-    assert.deepEqual(client.removals, ["npm:arcwell@0.1.0"]);
+    assert.deepEqual(client.removals, [ARCWELL_PACKAGE_SOURCE]);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -334,7 +355,7 @@ test("apply compensates only invocation changes after a failure", async () => {
   try {
     const agents = join(root, "AGENTS.md");
     writeFileSync(agents, "unrelated\n");
-    const preexisting = "npm:arcwell@0.1.0";
+    const preexisting = ARCWELL_PACKAGE_SOURCE;
     const client = new FakePiClient([preexisting]);
     await assert.rejects(applySetup(createDefaultManifest(), {
       agentDir: root,

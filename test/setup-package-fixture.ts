@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import type { PiPackage } from "../src/setup/pi-client.js";
 
 export const validArcwellPackageDir = join(
@@ -54,7 +55,7 @@ const externalPackageDir = join(
 );
 
 export function fixtureInstalledPath(source: string): string {
-  return source === "npm:arcwell@0.1.0" ? validArcwellPackageDir : externalPackageDir;
+  return source === ARCWELL_PACKAGE_SOURCE ? validArcwellPackageDir : externalPackageDir;
 }
 
 export function fixturePiPackage(

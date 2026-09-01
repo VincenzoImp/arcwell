@@ -11,10 +11,11 @@ arcwell doctor [--json]
 arcwell uninstall [--yes]
 ```
 
-After separately authorized publication, bootstrap an exact release with
-`npm install --global arcwell@0.1.0`; do not use `latest` or an ephemeral `npx` directory. Generate
-and inspect input with `arcwell setup --dry-run --write-manifest arcwell.json`, then apply headlessly
-with `arcwell setup --manifest arcwell.json --yes`. Non-TTY mutation requires both manifest and
+The npm package is not published. With an npm version that supports GitHub shorthands, bootstrap
+the exact release with `npx github:VincenzoImp/arcwell#v0.1.0 setup`; Pi resources use
+`pi install git:github.com/VincenzoImp/arcwell@v0.1.0`. Generate and inspect input with `setup
+--dry-run --write-manifest arcwell.json`, then apply headlessly with `setup --manifest arcwell.json
+--yes` through the same exact `npx` source. Non-TTY mutation requires both manifest and
 confirmation flags. Dry run and manifest output perform no install, Pi settings mutation, model
 call, or network access. A TTY dry run without a manifest collects wizard choices without an apply
 confirmation before rendering/writing the selected manifest; non-TTY dry run uses deterministic

@@ -7,6 +7,7 @@ import { applySetup } from "../src/setup/apply.js";
 import { runDoctor } from "../src/setup/doctor.js";
 import { createDefaultManifest } from "../src/setup/manifest.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "../src/setup/ownership.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
 import { uninstallArcwell } from "../src/setup/uninstall.js";
 import { workingAgreementDigest } from "../src/setup/working-agreement.js";
@@ -15,7 +16,7 @@ import { fixturePiPackage } from "./setup-package-fixture.js";
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 const agreement = "<!-- arcwell:start -->\nArcwell rules\n<!-- arcwell:end -->\n";
-const arcwellSource = "npm:arcwell@0.1.0";
+const arcwellSource = ARCWELL_PACKAGE_SOURCE;
 const ownedSource = "npm:@spences10/pi-lsp@0.0.46";
 const preexistingSource = "npm:preexisting@1.0.0";
 
@@ -189,6 +190,70 @@ test("uninstall refuses an additional user source with an owned npm identity bef
   }
 });
 
+test("uninstall refuses duplicate user entries with the exact owned source before removal", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "uninstall-duplicate-owned-source-"));
+  try {
+    writeState(root);
+    const client = new FakePiClient([
+      piPackage(arcwellSource),
+      piPackage(ownedSource),
+      piPackage(ownedSource, "user", true),
+    ]);
+
+    await assert.rejects(
+      uninstallArcwell({ agentDir: root, piClient: client }),
+      /identity conflict.*pi-lsp.*more than one user source/i,
+    );
+    assert.deepEqual(client.removals, []);
+    assert.ok(readOwnership(join(root, "arcwell", "ownership.json")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("uninstall refuses a changed equivalent Git form when the exact owned settings source is absent", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "uninstall-changed-git-form-"));
+  try {
+    writeState(root);
+    const changedSource = "git:https://github.com/VincenzoImp/arcwell@v0.1.0";
+    const client = new FakePiClient([
+      piPackage(changedSource),
+      piPackage(ownedSource),
+    ]);
+
+    await assert.rejects(
+      uninstallArcwell({ agentDir: root, piClient: client }),
+      /cannot prove the exact owned settings source.*arcwell/i,
+    );
+    assert.deepEqual(client.removals, []);
+    assert.ok(readOwnership(join(root, "arcwell", "ownership.json")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("uninstall refuses an extra equivalent Git form beside the exact owned settings source", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "uninstall-extra-git-form-"));
+  try {
+    writeState(root);
+    const extraSource = "ssh://git@github.com/VincenzoImp/arcwell@v0.1.0";
+    const client = new FakePiClient([
+      piPackage(arcwellSource),
+      piPackage(extraSource),
+      piPackage(ownedSource),
+    ]);
+
+    await assert.rejects(
+      uninstallArcwell({ agentDir: root, piClient: client }),
+      /cannot prove the exact owned settings source.*arcwell/i,
+    );
+    assert.deepEqual(client.removals, []);
+    assert.ok(readOwnership(join(root, "arcwell", "ownership.json")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("remove errors reconcile ownership from refreshed Pi inventory", async () => {
   const root = mkdtempSync(join(temporaryRoot, "uninstall-remove-reconcile-"));
   try {
@@ -311,6 +376,34 @@ test("setup and uninstall restore a pre-existing AGENTS.md without a final newli
 
     assert.equal(readFileSync(agents, "utf8"), original);
     if (process.platform !== "win32") assert.equal(lstatSync(agents).mode & 0o777, 0o640);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("setup and uninstall preserve a pre-existing equivalent Arcwell Git source", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "lifecycle-equivalent-arcwell-"));
+  try {
+    const equivalentSource = "https://github.com/VincenzoImp/arcwell@v0.1.0";
+    const equivalentPackage = {
+      ...piPackage(equivalentSource),
+      installedPath: piPackage(arcwellSource).installedPath,
+    };
+    const client = new FakePiClient([equivalentPackage]);
+
+    const ownership = await applySetup(createDefaultManifest(), {
+      agentDir: root,
+      piClient: client,
+      workingAgreement: agreement,
+    });
+    assert.equal(ownership.installedPackageSources.includes(arcwellSource), false);
+
+    const doctor = await runDoctor({ agentDir: root, piClient: client });
+    assert.notEqual(doctor.exitStatus, 2);
+    await uninstallArcwell({ agentDir: root, piClient: client });
+
+    assert.deepEqual(client.packages, [equivalentPackage]);
+    assert.equal(client.removals.includes(arcwellSource), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

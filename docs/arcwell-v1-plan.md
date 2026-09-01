@@ -18,7 +18,7 @@ arcwell uninstall [--yes]
 
 `setup --dry-run` replaces separate public `init` and `plan` commands. The stable v1 setup manifest is canonical for setup only. Existing manifests and model-backed workflows are legacy Experimental formats available only under `arcwell experimental`; they are not accepted as setup input and do not define v1 completion.
 
-A release installation uses the exact source `npm:arcwell@<running-version>`. A development smoke test uses a stable extracted package directory, never an ephemeral `npx` path. Publication remains a separately authorized action, but publish-ready package bootstrap is part of v1.
+The `0.1.0` release installation uses the exact source `git:github.com/VincenzoImp/arcwell@v0.1.0`; the npm package is not published. The clean-copy development smoke proves the npm `prepare` build without fetching GitHub and is not Git transport evidence. The separate explicit Git-source smoke uses `main` only after a main push for transport evidence and uses a pushed version tag for release-tag evidence.
 
 ## Architecture
 
@@ -204,7 +204,7 @@ interface ArcwellOwnership {
 
 1. Use argument arrays, never shell command strings; bound and sanitize process output; propagate abort.
 2. Preflight package identity using Pi’s documented rules. If the same npm package/repository already exists with a different source/version, fail before mutation rather than replacing it.
-3. Install exact `npm:arcwell@<running-version>` plus accepted protection packages.
+3. Install exact `git:github.com/VincenzoImp/arcwell@v0.1.0` plus accepted exact npm protection packages.
 4. Merge a uniquely marked Arcwell block into `$PI_CODING_AGENT_DIR/AGENTS.md`; preserve unrelated content and file mode; reject malformed markers and symlinks.
 5. Write runtime config and ownership atomically. Ownership contains no credentials, environment values, session data, project path, or command output.
 6. On setup failure, restore prior Arcwell-owned files and remove only packages newly installed by this invocation. No general transaction journal, leases, fencing, or database.

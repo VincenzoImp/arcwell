@@ -9,6 +9,7 @@ import { PACKAGE_CATALOG } from "./catalog.js";
 import { assertNoSymbolicLinkComponents, parseRuntimeConfigJson } from "./config.js";
 import { ARCWELL_VERSION } from "./manifest.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
+import { ARCWELL_PACKAGE_SOURCE, packageSourceIdentity } from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
 import { managedWorkingAgreementDigest, removeWorkingAgreement } from "./working-agreement.js";
 
@@ -30,7 +31,7 @@ export interface UninstallCommandDependencies {
 }
 
 const knownOwnedSources = new Set([
-  `npm:arcwell@${ARCWELL_VERSION}`,
+  ARCWELL_PACKAGE_SOURCE,
   ...PACKAGE_CATALOG.map((entry) => entry.source),
 ]);
 
@@ -75,13 +76,6 @@ function failureMessage(error: unknown, removed: readonly string[], remaining: r
   return `uninstall cleanup failed: ${detail}; removed: ${removed.join(", ") || "none"}; remaining owned packages: ${remaining.join(", ") || "none"}; ownership was preserved for retry`;
 }
 
-function npmPackageIdentity(source: string): string | undefined {
-  if (!source.startsWith("npm:")) return undefined;
-  const specifier = source.slice(4);
-  const match = /^(@?[^@]+(?:\/[^@]+)?)(?:@(.+))?$/.exec(specifier);
-  return match?.[1] ?? (specifier || undefined);
-}
-
 function userSourceSet(packages: readonly PiPackage[]): Set<string> {
   return new Set(packages.filter((item) => item.scope === "user").map((item) => item.source));
 }
@@ -92,11 +86,20 @@ function assertNoIdentityRemovalConflicts(
 ): void {
   const userPackages = packages.filter((item) => item.scope === "user");
   for (const ownedSource of ownedSources) {
-    const identity = npmPackageIdentity(ownedSource);
-    const conflict = identity && userPackages.find((item) =>
-      item.source !== ownedSource && npmPackageIdentity(item.source) === identity);
-    if (conflict) {
-      throw new Error(`uninstall package identity conflict for ${identity}: additional user source ${conflict.source}`);
+    const identity = packageSourceIdentity(ownedSource);
+    const matches = identity
+      ? userPackages.filter((item) => packageSourceIdentity(item.source) === identity)
+      : [];
+    if (matches.length > 1) {
+      throw new Error(
+        `uninstall package identity conflict for ${identity}: cannot prove the exact owned settings source ${ownedSource}; found more than one user source (${matches.map((item) => item.source).join(", ")})`,
+      );
+    }
+    const conflict = matches[0];
+    if (conflict && conflict.source !== ownedSource) {
+      throw new Error(
+        `uninstall package identity conflict for ${identity}: cannot prove the exact owned settings source ${ownedSource}; found changed user source ${conflict.source}`,
+      );
     }
   }
 }

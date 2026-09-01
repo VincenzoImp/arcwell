@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -85,6 +85,10 @@ test("isolated package-smoke environment is allowlist-only", () => {
     LANG: "en_US.UTF-8",
     CI: "true",
     GITHUB_RUN_ID: "123",
+    GITHUB_TOKEN: "secret",
+    GH_TOKEN: "secret",
+    GIT_ASKPASS: "/credential-helper",
+    SSH_AUTH_SOCK: "/credential-agent",
     NPM_TOKEN: "secret",
     AWS_SECRET_ACCESS_KEY: "secret",
     npm_config_userconfig: "/private/npmrc",
@@ -107,6 +111,10 @@ test("isolated package-smoke environment is allowlist-only", () => {
   assert.equal(environment.PI_CODING_AGENT_DIR, "/isolated/agent");
   assert.equal(environment.NPM_CONFIG_CACHE, "/isolated/cache");
   assert.equal(environment.NPM_CONFIG_GLOBALCONFIG, "/isolated/config/npmrc");
+  assert.equal(environment.GITHUB_TOKEN, undefined);
+  assert.equal(environment.GH_TOKEN, undefined);
+  assert.equal(environment.GIT_ASKPASS, undefined);
+  assert.equal(environment.SSH_AUTH_SOCK, undefined);
   assert.equal(environment.NPM_TOKEN, undefined);
   assert.equal(environment.AWS_SECRET_ACCESS_KEY, undefined);
   assert.equal(environment.npm_config_userconfig, undefined);
@@ -153,6 +161,39 @@ test("third-party extension child processes cannot inherit excluded credentials 
       else process.env[key] = value;
     }
   }
+});
+
+test("Arcwell declares separate prepare and explicit networked Git-source smokes", () => {
+  const manifest = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  assert.equal(manifest.scripts?.prepare, "npm run build");
+  assert.equal(manifest.scripts?.["test:prepare"], "node scripts/prepare-smoke.mjs");
+  assert.equal(manifest.scripts?.["test:git-source"], "node scripts/git-source-smoke.mjs");
+  assert.equal(manifest.scripts?.["test:git-install"], undefined);
+  assert.deepEqual({
+    typescript: manifest.dependencies?.typescript,
+    nodeTypes: manifest.dependencies?.["@types/node"],
+    ajv: manifest.dependencies?.ajv,
+  }, {
+    typescript: "6.0.3",
+    nodeTypes: "26.4.0",
+    ajv: "8.20.0",
+  });
+  assert.equal(manifest.devDependencies?.typescript, undefined);
+  assert.equal(manifest.devDependencies?.["@types/node"], undefined);
+  assert.equal(manifest.devDependencies?.ajv, undefined);
+  assert.equal(manifest.devDependencies?.["typescript-language-server"], "6.0.0");
+
+  const prepareSmoke = readFileSync(join(process.cwd(), "scripts", "prepare-smoke.mjs"), "utf8");
+  assert.match(prepareSmoke, /"install",\s*"--omit=dev"/);
+
+  const gitSourceSmoke = readFileSync(join(process.cwd(), "scripts", "git-source-smoke.mjs"), "utf8");
+  assert.match(gitSourceSmoke, /git:github\.com\/VincenzoImp\/arcwell@\$\{ref\}/);
+  assert.match(gitSourceSmoke, /run\(process\.execPath, \[piCli, "install", source\]/);
+  assert.match(gitSourceSmoke, /DefaultResourceLoader/);
 });
 
 test("install lifecycle declarations are returned as smoke failures", () => {

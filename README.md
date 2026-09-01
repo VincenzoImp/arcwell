@@ -1,33 +1,38 @@
 # Arcwell
 
-Arcwell is a reproducible, batteries-included environment for Pi. Version `0.1.0` is a local,
-unpublished native Pi package. Its stable commands are `setup`, `doctor`, and `uninstall`.
-Legacy manifests and model-backed workflows remain under `arcwell experimental` and are not part
-of the stable setup contract.
+Arcwell is a reproducible, batteries-included environment for Pi. Version `0.1.0` is distributed
+from its pinned GitHub source; the npm package is not published. Its stable commands are `setup`,
+`doctor`, and `uninstall`. Legacy manifests and model-backed workflows remain under
+`arcwell experimental` and are not part of the stable setup contract.
 
 ## Requirements and release status
 
 - Node.js `>=24.15.0`.
 - Pi `0.84.4` for the currently audited lifecycle and package APIs.
-- No npm release currently exists. Do not treat the commands below as evidence of publication.
+- No npm release exists. Installation uses the exact GitHub `v0.1.0` ref instead.
 - A real-package Pi smoke passed on macOS. Linux and Windows smoke evidence remains pending; no
   cross-platform support claim follows until both checked-in CI jobs pass.
 
-## Exact stable commands
+## Quick start and exact stable commands
 
-After an authorized `0.1.0` publication, use an exact version rather than `latest` or an ephemeral
-`npx` directory:
+When the installed npm version supports GitHub shorthands, the recommended no-npm-release setup is:
 
 ```bash
-npm install --global arcwell@0.1.0
-arcwell setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.1.0 setup --dry-run --write-manifest arcwell.json
 # Review arcwell.json and the dry-run output.
-arcwell setup --manifest arcwell.json --yes
-arcwell doctor
-arcwell doctor --json
+npx github:VincenzoImp/arcwell#v0.1.0 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.1.0 doctor
 ```
 
-Interactive setup is `arcwell setup`. A non-TTY mutation requires both `--manifest <file>` and
+Arcwell is not published to the npm registry: `npx` obtains this exact GitHub ref and npm runs the
+package's documented `prepare` build. To install only Arcwell's native Pi resources directly, use
+Pi's exact Git source:
+
+```bash
+pi install git:github.com/VincenzoImp/arcwell@v0.1.0
+```
+
+The stable setup behavior is described below. Interactive setup is `arcwell setup`. A non-TTY mutation requires both `--manifest <file>` and
 `--yes`. `--write-manifest <file>` writes the selected portable manifest and exits unless combined
 with `--dry-run`; dry run never installs packages, changes Pi settings, invokes a model, or
 accesses the network. On a TTY, dry run without `--manifest` collects wizard choices, skips the
@@ -40,8 +45,16 @@ arcwell doctor [--json]
 arcwell uninstall [--yes]
 ```
 
-Setup asks Pi to install `npm:arcwell@0.1.0` and selected exact package sources. It merges one
-marked block into `$PI_CODING_AGENT_DIR/AGENTS.md` and writes bounded non-secret state under
+Setup asks Pi to install `git:github.com/VincenzoImp/arcwell@v0.1.0`; selected third-party
+packages remain exact npm sources. Pi-supported HTTPS, `git:https://`, SSH URL, and prefixed
+`git:git@github.com:` spellings of that same repository and ref satisfy the selection semantically;
+`www.github.com` normalizes to `github.com`. Raw SCP syntax such as
+`git@github.com:VincenzoImp/arcwell@v0.1.0` has no Git meaning to Pi 0.84.4 without the `git:` prefix
+and is treated as a local source. Setup does not
+reinstall or claim ownership of a matching pre-existing source, while another ref for the same
+repository fails preflight before mutation. It merges one marked block into
+`$PI_CODING_AGENT_DIR/AGENTS.md`
+and writes bounded non-secret state under
 `$PI_CODING_AGENT_DIR/arcwell/`. When the documented environment variable is unset, Arcwell uses
 Pi's `getAgentDir()` default. It does not edit Pi settings directly.
 
@@ -82,12 +95,19 @@ Setup, doctor, uninstall, package tests, and dry run do not need a model.
 ## Package security warning
 
 Installing an npm package or Pi package executes code with the current user's permissions. Inspect
-the exact tarball, `package.json`, `LICENSE`, `NOTICE`, native resources, and dependency tree before
-installation. Pin version and integrity in controlled environments. Setup installs selected
-packages through Pi; those separately distributed packages retain their own code, side effects,
-licenses, and notices. Setup health and doctor use Pi's documented installed path to require the
-selected Arcwell package's exact name/version, regular protection-extension file, and loadable
-extension module. They do not register the extension during that check.
+the exact source/artifact, `package.json`, `LICENSE`, `NOTICE`, native resources, and dependency tree
+before installation. Arcwell transparently declares `prepare: npm run build` because npm runs
+`prepare` for Git dependencies; it compiles the CLI and Pi extension into `dist` before use.
+`typescript@6.0.3`, `@types/node@26.4.0`, and `ajv@8.20.0` are exact production dependencies because
+that build compiles both source and tests during `npm install --omit=dev`; only
+`typescript-language-server@6.0.0` remains development-only. The real-package smoke rejects install
+lifecycle scripts only in downloaded third-party packages, not
+Arcwell's disclosed build step. Pin versions and integrity in controlled environments. Setup
+installs selected packages through Pi; those separately distributed packages retain their own code,
+side effects, licenses, and notices. Setup health and doctor use Pi's documented installed path to
+validate Arcwell's `package.json` name/version independently of source type, then require a regular
+protection-extension file and loadable extension module. They do not register the extension during
+that check.
 
 ## Recovery and uninstall
 
@@ -104,8 +124,12 @@ arcwell uninstall --yes
 ```
 
 Uninstall removes only exact package sources recorded as installed by Arcwell, the marked working
-agreement block, runtime config, ownership, and an empty Arcwell directory that setup created. It
-does not remove Pi, credentials, sessions, trust state, pre-existing packages, unrelated
+agreement block, runtime config, ownership, and an empty Arcwell directory that setup created.
+Because Pi removal matches a Git repository identity rather than a ref spelling, uninstall refuses
+a changed or additional equivalent user source unless the inventory proves the one exact owned
+settings source and exactly one user-scope entry for that identity. Duplicate entries are refused
+even when their source strings are identical; uninstall never intentionally performs identity-wide
+cleanup of user-owned sources. It does not remove Pi, credentials, sessions, trust state, pre-existing packages, unrelated
 `AGENTS.md` bytes, or non-Arcwell files. Modified managed content and partial cleanup fail with
 recoverable ownership preserved where possible. A missing managed agreement file/block is treated
 as modification and preserves recovery state. TTY uninstall asks for confirmation; `--yes` skips
@@ -113,19 +137,44 @@ it and remains required for non-TTY uninstall. There is no stable rollback comma
 
 ## Local release-readiness checks
 
-These checks use repository-local scratch/cache paths, a fake Pi client, no credentials, no models,
-no real Pi settings, and no publication:
+The ordinary non-network checks use repository-local scratch/cache paths, fake Pi clients, no
+credentials, no models, no real Pi settings, and no publication:
 
 ```bash
 npm test
-npm run build
 npm pack --dry-run --json --cache .npm-cache
 ```
 
-Tests also pack and extract to a stable `.tmp-tests` directory, verify exact native resources with
-`DefaultResourceLoader`, and exercise setup twice, doctor, uninstall, and exact filesystem
-restoration. A real-package Pi smoke has passed on macOS; Linux and Windows remain open release
-gates.
+The separate prepare smoke may fetch npm dependencies into an empty isolated cache, but it does not
+fetch an Arcwell Git source:
+
+```bash
+npm run test:prepare
+```
+
+The prepare smoke copies the working tree without `.git`, `dist`, or `node_modules`, gives npm an
+isolated home and empty cache, runs `npm install --omit=dev`, asserts the `prepare`-generated `dist`,
+CLI bin, and extension, then loads the native resources with `DefaultResourceLoader`. It proves the
+clean-copy prepare path, not Git transport. Tests also pack and extract to a stable `.tmp-tests`
+directory and exercise setup twice, doctor, uninstall, and exact filesystem restoration.
+
+Run networked smokes explicitly:
+
+```bash
+npm run test:packages
+npm run test:git-source -- main
+npm run test:git-source -- v0.1.0
+```
+
+The Git-source smoke uses repository-local Pi 0.84.4 in an isolated scratch agent directory with an
+allowlist-only environment, empty npm/Git configuration, non-interactive Git, and no inherited
+checkout token. It asks Pi to install `git:github.com/VincenzoImp/arcwell@<ref>`, reloads resources,
+checks the installed path, package name/version, and default extension, then deletes the scratch
+state. Use `main` only as a live transport smoke after the tested commit has been pushed to main;
+CI therefore runs it only for pushes to `main`, never pull requests. Use the release tag (for
+example `v0.1.0`) after that tag is pushed as the tag-release smoke. A main result does not prove a
+tag, and the clean-copy prepare smoke proves neither transport case. The real-package Pi smoke has
+passed on macOS; Linux and Windows remain open release gates.
 
 ## Current Experimental commands
 
@@ -236,7 +285,7 @@ Implemented locally:
 - one isolated Pi worker for an approved root task, with bounded writes and no project integration;
 - no-write, path-boundary, secret-file, and structured-artifact regression tests.
 
-The stable local implementation also includes the setup wizard, bounded lifecycle ownership,
-doctor, ownership-safe uninstall, compensation, exact package filtering, and fake-client scratch
-coverage. Public distribution, real Pi platform smoke jobs, generic Experimental DAG execution,
-Herdr execution, a Claude adapter, MCP server management, and release automation remain absent.
+The stable implementation also includes the setup wizard, bounded lifecycle ownership, doctor,
+ownership-safe uninstall, compensation, exact package filtering, Git-source distribution checks,
+and fake-client scratch coverage. npm publication, generic Experimental DAG execution, Herdr
+execution, a Claude adapter, MCP server management, and release automation remain absent.

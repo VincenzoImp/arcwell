@@ -178,9 +178,10 @@ function verifyPiSettingsException(entry, allPackages) {
 
 function reportPackageMetadata(npmRoot) {
   const arcwellPackageJson = join(repositoryRoot, "package.json");
+  const downloadedPackages = installedPackages(npmRoot);
   const packages = [
     { directory: repositoryRoot, packageJsonPath: arcwellPackageJson, manifest: readJson(arcwellPackageJson) },
-    ...installedPackages(npmRoot),
+    ...downloadedPackages,
   ];
   assert(packages.length > 1, `No installed packages found under ${npmRoot}`);
 
@@ -198,7 +199,9 @@ function reportPackageMetadata(npmRoot) {
       missingLicense.push(entry);
     }
   }
-  const lifecycle = findInstallLifecycleScripts(packages);
+  // Arcwell's documented prepare script builds a Git checkout. This rejection is
+  // specifically for downloaded third-party packages selected by the smoke.
+  const lifecycle = findInstallLifecycleScripts(downloadedPackages);
 
   console.log(`\nInspected ${packages.length} installed package.json files recursively.`);
   console.log("License sets:");
@@ -208,11 +211,11 @@ function reportPackageMetadata(npmRoot) {
   console.log("Missing package license metadata:");
   if (missingLicense.length === 0) console.log("  none");
   for (const entry of missingLicense) console.log(`  ${packageLabel(entry.manifest)} (${entry.packageJsonPath})`);
-  console.log("Install lifecycle scripts:");
+  console.log("Downloaded third-party install lifecycle scripts:");
   if (lifecycle.length === 0) console.log("  none");
   for (const script of lifecycle.toSorted()) console.log(`  ${script}`);
 
-  assert(lifecycle.length === 0, `Installed manifests declare lifecycle scripts:\n${lifecycle.join("\n")}`);
+  assert(lifecycle.length === 0, `Downloaded third-party manifests declare lifecycle scripts:\n${lifecycle.join("\n")}`);
   for (const entry of missingLicense) verifyPiSettingsException(entry, packages);
   return packages;
 }

@@ -8,16 +8,17 @@ import { PACKAGE_CATALOG } from "../src/setup/catalog.js";
 import { writeRuntimeConfigAtomic } from "../src/setup/config.js";
 import { ARCWELL_VERSION } from "../src/setup/manifest.js";
 import { writeOwnershipAtomic, type ArcwellOwnership } from "../src/setup/ownership.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { assertArcwellPackageHealthy } from "../src/setup/package-health.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
 import type { RuntimeConfig } from "../src/setup/types.js";
 import { workingAgreementDigest } from "../src/setup/working-agreement.js";
-import { fixturePiPackage } from "./setup-package-fixture.js";
+import { fixtureInstalledPath, fixturePiPackage } from "./setup-package-fixture.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 const agreement = "<!-- arcwell:start -->\nArcwell rules\n<!-- arcwell:end -->\n";
-const arcwellSource = `npm:arcwell@${ARCWELL_VERSION}`;
+const arcwellSource = ARCWELL_PACKAGE_SOURCE;
 const allSources = [arcwellSource, ...PACKAGE_CATALOG.map((entry) => entry.source)];
 const guarded: RuntimeConfig = {
   schemaVersion: 1,
@@ -96,6 +97,27 @@ test("doctor is read-only and reports a fully effective exact setup as healthy",
   }
 });
 
+test("doctor locates a selected Arcwell package by semantic Git source", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
+  try {
+    writeHealthyState(root);
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.1.0";
+    const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
+    packages.push({
+      ...fixturePiPackage(equivalentSource),
+      installedPath: fixtureInstalledPath(ARCWELL_PACKAGE_SOURCE),
+    });
+
+    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+
+    assert.equal(report.exitStatus, 0);
+    assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "ok"));
+    assert.ok(report.checks.some((check) => check.id === "module.lsp" && check.status === "ok"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("doctor warns only for disabled protections, not disabled optional modules", async () => {
   const root = mkdtempSync(join(temporaryRoot, "doctor-warning-"));
   try {
@@ -123,7 +145,7 @@ test("doctor errors for selected packages missing at user scope and exact versio
     writeHealthyState(root);
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push(fixturePiPackage(arcwellSource, "project"));
-    packages.push(fixturePiPackage("npm:arcwell@0.2.0"));
+    packages.push(fixturePiPackage("git:github.com/VincenzoImp/arcwell@v0.2.0"));
     const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
 
     assert.equal(report.exitStatus, 2);
@@ -268,7 +290,7 @@ test("Arcwell extension health does not reuse cached syntax after same-size cont
     utimesSync(extensionPath, stableTimestamp, stableTimestamp);
     const installed = fixturePiPackage(arcwellSource) as PiPackage & { installedPath: string };
     installed.installedPath = packageRoot;
-    await assertArcwellPackageHealthy(installed, arcwellSource);
+    await assertArcwellPackageHealthy(installed);
 
     const timestamps = lstatSync(extensionPath);
     const invalid = "export default function extension( {\n".padEnd(valid.length, " ");
@@ -276,7 +298,7 @@ test("Arcwell extension health does not reuse cached syntax after same-size cont
     writeFileSync(extensionPath, invalid);
     utimesSync(extensionPath, timestamps.atime, timestamps.mtime);
 
-    await assert.rejects(assertArcwellPackageHealthy(installed, arcwellSource), /could not be loaded/);
+    await assert.rejects(assertArcwellPackageHealthy(installed), /could not be loaded/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

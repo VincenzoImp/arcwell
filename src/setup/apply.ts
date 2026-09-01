@@ -23,6 +23,11 @@ import {
 } from "./config.js";
 import { ARCWELL_VERSION } from "./manifest.js";
 import { assertArcwellPackageHealthy } from "./package-health.js";
+import {
+  ARCWELL_PACKAGE_SOURCE,
+  packageSourceIdentity,
+  packageSourcesEquivalent,
+} from "./package-source.js";
 import { createSetupPlan } from "./plan.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import type { PiClient, PiPackage } from "./pi-client.js";
@@ -45,15 +50,6 @@ export interface ApplySetupDependencies {
   piClient: PiClient;
   workingAgreement: string;
   writeRuntimeConfig?: (path: string, config: RuntimeConfig) => void;
-}
-
-function npmPackageName(source: string): string | undefined {
-  if (!source.startsWith("npm:")) return undefined;
-  const specifier = source.slice(4);
-  // Mirror Pi 0.84.4 parseNpmSpec(): identity is the requested package name,
-  // including when its version is an npm alias such as pkg@npm:other@1.0.0.
-  const match = /^(@?[^@]+(?:\/[^@]+)?)(?:@(.+))?$/.exec(specifier);
-  return match?.[1] ?? (specifier || undefined);
 }
 
 function snapshotFile(path: string): FileSnapshot {
@@ -96,9 +92,10 @@ function desiredPackageSources(manifest: SetupManifest): string[] {
 
 function assertNoPackageConflicts(desired: readonly string[], installed: readonly PiPackage[]): void {
   for (const source of desired) {
-    const identity = npmPackageName(source);
-    if (!identity) throw new Error(`setup package source has no npm identity: ${source}`);
-    const conflict = installed.find((item) => npmPackageName(item.source) === identity && item.source !== source);
+    const identity = packageSourceIdentity(source);
+    if (!identity) throw new Error(`setup package source has no package identity: ${source}`);
+    const conflict = installed.find((item) =>
+      packageSourceIdentity(item.source) === identity && !packageSourcesEquivalent(item.source, source));
     if (conflict) {
       throw new Error(`package identity conflict for ${identity}: found ${conflict.source}, requested ${source}`);
     }
@@ -110,13 +107,13 @@ function assertNoUnownedDeselectedPackages(
   installed: readonly PiPackage[],
   ownedSources: ReadonlySet<string>,
 ): void {
-  const desiredIdentities = new Set(desired.map(npmPackageName));
+  const desiredIdentities = new Set(desired.map(packageSourceIdentity));
   for (const entry of PACKAGE_CATALOG) {
-    const identity = npmPackageName(entry.source);
+    const identity = packageSourceIdentity(entry.source);
     if (!identity || desiredIdentities.has(identity)) continue;
     const unowned = installed.find((item) =>
       item.scope === "user"
-      && npmPackageName(item.source) === identity
+      && packageSourceIdentity(item.source) === identity
       && !ownedSources.has(item.source));
     if (unowned) {
       throw new Error(`unowned global package ${unowned.source} remains installed while ${entry.capability} is deselected`);
@@ -158,21 +155,22 @@ export async function applySetup(
   const priorOwnedSources = new Set(priorOwnership?.installedPackageSources ?? []);
   assertNoPackageConflicts(desired, initiallyInstalled);
   assertNoUnownedDeselectedPackages(desired, initiallyInstalled, priorOwnedSources);
-  const initiallyInstalledUserSources = new Set(
-    initiallyInstalled.filter((item) => item.scope === "user").map((item) => item.source),
-  );
+  const initiallyInstalledUserSources = initiallyInstalled
+    .filter((item) => item.scope === "user")
+    .map((item) => item.source);
   const newlyInstalled: string[] = [];
   const removedPrior: string[] = [];
   const changedFiles: FileSnapshot[] = [];
 
   try {
     for (const source of desired) {
-      if (initiallyInstalledUserSources.has(source)) continue;
+      if (initiallyInstalledUserSources.some((installedSource) =>
+        packageSourcesEquivalent(installedSource, source))) continue;
       // Record the attempt first: a failed Pi/npm command may have changed package
       // files even when it did not persist the settings entry returned by `pi list`.
       newlyInstalled.push(source);
       await piClient.install(source, signal);
-      initiallyInstalledUserSources.add(source);
+      initiallyInstalledUserSources.push(source);
     }
 
     changedFiles.push(agreementSnapshot);
@@ -183,13 +181,14 @@ export async function applySetup(
     // Disable deselected packages only after the desired config is in place. Remove
     // only sources that a prior Arcwell setup recorded as its own.
     for (const source of priorOwnedSources) {
-      if (desired.includes(source)) continue;
+      if (desired.some((desiredSource) => packageSourcesEquivalent(source, desiredSource))) continue;
       await piClient.remove(source, signal);
       removedPrior.push(source);
     }
 
     const ownedSources = [...new Set([
-      ...[...priorOwnedSources].filter((source) => desired.includes(source)),
+      ...[...priorOwnedSources].filter((source) =>
+        desired.some((desiredSource) => packageSourcesEquivalent(source, desiredSource))),
       ...newlyInstalled,
     ])];
     const ownership: ArcwellOwnership = {
@@ -207,16 +206,14 @@ export async function applySetup(
     writeOwnershipAtomic(ownershipPath, ownership);
 
     const healthPackages = await piClient.list(signal);
-    const healthySources = new Set(
-      healthPackages.filter((item) => item.scope === "user" && !item.filtered).map((item) => item.source),
-    );
-    const missing = desired.find((source) => !healthySources.has(source));
+    const healthyPackages = healthPackages.filter((item) => item.scope === "user" && !item.filtered);
+    const missing = desired.find((source) => !healthyPackages.some((item) =>
+      packageSourcesEquivalent(item.source, source)));
     if (missing) throw new Error(`setup health check: missing package ${missing}`);
-    const arcwellSource = `npm:arcwell@${ARCWELL_VERSION}`;
-    const installedArcwell = healthPackages.find((item) =>
-      item.scope === "user" && !item.filtered && item.source === arcwellSource)!;
+    const installedArcwell = healthyPackages.find((item) =>
+      packageSourcesEquivalent(item.source, ARCWELL_PACKAGE_SOURCE))!;
     try {
-      await assertArcwellPackageHealthy(installedArcwell, arcwellSource);
+      await assertArcwellPackageHealthy(installedArcwell);
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`setup health check: ${detail}`);

@@ -14,6 +14,7 @@ import { basename, dirname, join } from "node:path";
 
 import { assertNoSymbolicLinkComponents } from "./config.js";
 import { assertNoDuplicateJsonProperties } from "./manifest.js";
+import { ARCWELL_PACKAGE_SOURCE } from "./package-source.js";
 
 export const MAX_OWNERSHIP_BYTES = 64 * 1024;
 
@@ -58,8 +59,8 @@ export function parseOwnership(value: unknown): ArcwellOwnership {
     const sources = value[property];
     if (!Array.isArray(sources)) throw new Error(`${property}: expected an array`);
     const parsed = sources.map((source, index) => {
-      if (typeof source !== "string" || !exactNpmSource.test(source)) {
-        throw new Error(`${property}[${index}]: expected an exact npm package source`);
+      if (typeof source !== "string" || (source !== ARCWELL_PACKAGE_SOURCE && !exactNpmSource.test(source))) {
+        throw new Error(`${property}[${index}]: expected an exact npm package source or the exact Arcwell Git source`);
       }
       return source;
     });

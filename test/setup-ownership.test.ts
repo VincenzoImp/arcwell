@@ -10,6 +10,7 @@ import {
   writeOwnershipAtomic,
   type ArcwellOwnership,
 } from "../src/setup/ownership.js";
+import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
@@ -18,8 +19,8 @@ const ownership: ArcwellOwnership = {
   schemaVersion: 1,
   arcwellVersion: "0.1.0",
   manifestDigest: digest,
-  installedPackageSources: ["npm:arcwell@0.1.0"],
-  selectedPackageSources: ["npm:arcwell@0.1.0", "npm:@spences10/pi-lsp@0.0.46"],
+  installedPackageSources: [ARCWELL_PACKAGE_SOURCE],
+  selectedPackageSources: [ARCWELL_PACKAGE_SOURCE, "npm:@spences10/pi-lsp@0.0.46"],
   workingAgreementDigest: "b".repeat(64),
   workingAgreementExisted: true,
   workingAgreementEndedWithNewline: false,

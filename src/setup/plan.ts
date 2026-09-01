@@ -1,5 +1,6 @@
 import { selectedCatalogEntries } from "./catalog.js";
 import { ARCWELL_VERSION, manifestDigest } from "./manifest.js";
+import { ARCWELL_PACKAGE_SOURCE } from "./package-source.js";
 import { protectionNames, type SetupManifest } from "./types.js";
 
 export type SetupOperationKind = "install-package" | "merge-agreement" | "write-config";
@@ -35,7 +36,7 @@ export function createSetupPlan(manifest: SetupManifest): SetupPlan {
     {
       id: "package.arcwell",
       kind: "install-package",
-      source: `npm:arcwell@${ARCWELL_VERSION}`,
+      source: ARCWELL_PACKAGE_SOURCE,
       description: "Select the exact running Arcwell Pi package",
     },
     ...packageOperations,
