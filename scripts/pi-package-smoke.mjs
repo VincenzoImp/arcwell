@@ -266,7 +266,7 @@ async function verifyResources(catalogSources, npmRoot) {
 
   assert(extensionResult.extensions.length === 13,
     `Expected exactly 13 extensions, found ${extensionResult.extensions.length}`);
-  assert(skillResult.skills.length === 15, `Expected exactly 15 skills, found ${skillResult.skills.length}`);
+  assert(skillResult.skills.length === 17, `Expected exactly 17 skills, found ${skillResult.skills.length}`);
   assert(promptResult.prompts.length === 11, `Expected exactly 11 prompts, found ${promptResult.prompts.length}`);
 
   const extensionsForSource = (source) => extensionResult.extensions.filter((entry) => entry.sourceInfo.source === source);
@@ -293,7 +293,8 @@ async function verifyResources(catalogSources, npmRoot) {
   ]), "Arcwell extensions were not discovered exactly from the installed local package");
   assert(JSON.stringify(arcwellSkills.map((entry) => entry.name).sort()) === JSON.stringify([
     "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
-    "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+    "implementing", "planning", "prototype", "research", "scope-check", "tdd",
+    "verification", "version-control", "web",
   ]), "Arcwell skills were not discovered exactly");
   assert(JSON.stringify(arcwellPrompts.map((entry) => entry.name).sort()) === JSON.stringify(["autonomous", "implement", "implement-and-review", "quick", "scout-and-plan"]),
     "Arcwell prompts were not discovered exactly");

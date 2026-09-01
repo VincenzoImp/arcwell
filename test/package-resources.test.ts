@@ -64,10 +64,12 @@ test("package manifest declares the exact native Pi resource set", () => {
       "./skills/handoff/SKILL.md",
       "./skills/implementing/SKILL.md",
       "./skills/planning/SKILL.md",
+      "./skills/prototype/SKILL.md",
       "./skills/research/SKILL.md",
       "./skills/scope-check/SKILL.md",
       "./skills/tdd/SKILL.md",
       "./skills/verification/SKILL.md",
+      "./skills/version-control/SKILL.md",
       "./skills/web/SKILL.md",
     ],
     prompts: [
@@ -155,7 +157,8 @@ test("DefaultResourceLoader discovers only package resources without project lea
       skills.filter((skill) => belongsToPackage(skill.filePath)).map((skill) => skill.name).sort(),
       [
         "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
-        "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+        "implementing", "planning", "prototype", "research", "scope-check", "tdd",
+        "verification", "version-control", "web",
       ],
     );
     // Subagent definitions are not package resources: Pi's manifest carries no `agents` key,

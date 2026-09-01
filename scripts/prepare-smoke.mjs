@@ -128,7 +128,7 @@ try {
     // install without a build step of their own.
     const expected = [
       ["extension", extensions.extensions.filter(fromCheckout).length, 7],
-      ["skill", skills.skills.filter(fromCheckout).length, 13],
+      ["skill", skills.skills.filter(fromCheckout).length, 15],
       ["prompt", prompts.prompts.filter(fromCheckout).length, 5],
     ];
     for (const [kind, actual, wanted] of expected) {

@@ -1,12 +1,15 @@
 export const protectionNames = ["effects", "secrets", "redaction"] as const;
 
 /**
- * A capability earns a manifest switch when turning it off is a decision with consequences:
- * it spawns processes, spends money, or writes to disk every session. Todo, questionnaire,
- * plan mode and the web skill ship inside Arcwell and are disabled with `pi config`, which
- * already handles every skill, prompt and extension individually.
+ * One module, one external package. A switch here decides whether Arcwell asks Pi to install
+ * something; it is not a general on/off for capabilities.
+ *
+ * Everything Arcwell ships itself — the todo overlay, structured questions, plan mode, the web
+ * skill, the memory extension — is disabled with `pi config`, which already handles every
+ * skill, prompt and extension individually, globally or per project. Mirroring that here would
+ * double the matrix to test and give two answers to the same question.
  */
-export const moduleNames = ["lsp", "context", "mcp", "subagents", "goal", "memory"] as const;
+export const moduleNames = ["lsp", "context", "mcp", "subagents", "goal"] as const;
 
 export type ProtectionName = (typeof protectionNames)[number];
 export type ModuleName = (typeof moduleNames)[number];

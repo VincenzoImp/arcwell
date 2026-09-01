@@ -19,7 +19,7 @@ const exactManifest = {
   posture: "guarded",
   protections: { effects: true, secrets: true, redaction: true },
   providerGuidance: { claudeSubscription: true },
-  modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true, memory: true },
+  modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true },
 };
 
 test("default setup manifest is the approved portable manifest", () => {

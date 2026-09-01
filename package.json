@@ -45,10 +45,12 @@
       "./skills/handoff/SKILL.md",
       "./skills/implementing/SKILL.md",
       "./skills/planning/SKILL.md",
+      "./skills/prototype/SKILL.md",
       "./skills/research/SKILL.md",
       "./skills/scope-check/SKILL.md",
       "./skills/tdd/SKILL.md",
       "./skills/verification/SKILL.md",
+      "./skills/version-control/SKILL.md",
       "./skills/web/SKILL.md"
     ],
     "prompts": [

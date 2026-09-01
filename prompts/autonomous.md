@@ -7,6 +7,13 @@ Take this work from where it is to done, without stopping to ask permission betw
 Open the worklog first (`/worklog`) and keep it current as you go. It is what survives
 compaction, so a decision that lives only in the conversation is a decision you will lose.
 
+**For work larger than one session, run this under `/goal`.** The two are different layers:
+this prompt is the method, which you follow; `/goal` is the limits, which you cannot talk your
+way past. It continues from the settled idle boundary, survives compaction and forks, stops on
+a token budget or after repeated runs with no progress, and requires evidence before
+`goal_complete` is accepted. Without it a long run can drift or declare itself finished; with
+it alone you would keep going without a method.
+
 ## The route
 
 Each leg has a condition. When the condition is absent, say so in one line and move on —

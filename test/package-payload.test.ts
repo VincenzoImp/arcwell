@@ -153,7 +153,8 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         .sort(),
       [
         "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
-        "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+        "implementing", "planning", "prototype", "research", "scope-check", "tdd",
+        "verification", "version-control", "web",
       ],
     );
     assert.deepEqual(
