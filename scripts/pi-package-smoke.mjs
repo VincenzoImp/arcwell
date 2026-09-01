@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import {
   createIsolatedEnvironment,
   findInstallLifecycleScripts,
-  npmCommand,
+  npmInvocation,
   replaceProcessEnvironment,
 } from "./package-smoke-helpers.mjs";
 
@@ -59,6 +59,7 @@ const projectDir = join(scratchRoot, "project");
 for (const directory of [home, agentDir, npmCache, dirname(npmConfig), projectDir]) mkdirSync(directory, { recursive: true });
 writeFileSync(npmConfig, "", { mode: 0o600 });
 
+const npm = npmInvocation();
 const isolatedEnvironment = createIsolatedEnvironment(process.env, {
   home,
   agentDir,
@@ -330,7 +331,7 @@ try {
   }
 
   for (const [auditRoot, label] of [[repositoryRoot, "repository"], [npmRoot, "isolated Pi npm root"]]) {
-    const auditOutput = run(npmCommand(), ["audit", "--omit=dev", "--audit-level=low", "--json"], {
+    const auditOutput = run(npm.command, [...npm.args, "audit", "--omit=dev", "--audit-level=low", "--json"], {
       cwd: auditRoot,
       capture: true,
     });

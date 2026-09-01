@@ -13,7 +13,12 @@ interface SmokeHelpers {
     npmConfig: string;
   }): NodeJS.ProcessEnv;
   findInstallLifecycleScripts(packages: Array<{ manifest: Record<string, unknown> }>): string[];
-  npmCommand(platform?: NodeJS.Platform): string;
+  npmInvocation(options?: {
+    environment?: NodeJS.ProcessEnv;
+    execPath?: string;
+    platform?: NodeJS.Platform;
+    realpath?: (path: string) => string;
+  }): { command: string; args: string[] };
   replaceProcessEnvironment(environment: NodeJS.ProcessEnv): () => void;
 }
 
@@ -23,10 +28,54 @@ const helpers = await import(helpersUrl.href) as SmokeHelpers;
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 
-test("npmCommand selects the Windows command shim", () => {
-  assert.equal(helpers.npmCommand("win32"), "npm.cmd");
-  assert.equal(helpers.npmCommand("linux"), "npm");
-  assert.equal(helpers.npmCommand("darwin"), "npm");
+test("npmInvocation runs npm's CLI through Node when npm_execpath is available", () => {
+  assert.deepEqual(helpers.npmInvocation({
+    environment: { npm_execpath: "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" },
+    execPath: "C:\\Program Files\\nodejs\\node.exe",
+    platform: "win32",
+  }), {
+    command: "C:\\Program Files\\nodejs\\node.exe",
+    args: ["C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js"],
+  });
+});
+
+test("npmInvocation resolves a colocated Unix npm launcher to its CLI", () => {
+  let resolvedPath = "";
+  assert.deepEqual(helpers.npmInvocation({
+    environment: {},
+    execPath: "/opt/homebrew/Cellar/node/26.4.0/bin/node",
+    platform: "darwin",
+    realpath(path) {
+      resolvedPath = path;
+      return "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js";
+    },
+  }), {
+    command: "/opt/homebrew/Cellar/node/26.4.0/bin/node",
+    args: ["/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js"],
+  });
+  assert.equal(resolvedPath, "/opt/homebrew/Cellar/node/26.4.0/bin/npm");
+});
+
+test("npmInvocation has deterministic CLI fallbacks without command shims", () => {
+  assert.deepEqual(helpers.npmInvocation({
+    environment: {},
+    execPath: "C:\\Program Files\\nodejs\\node.exe",
+    platform: "win32",
+  }), {
+    command: "C:\\Program Files\\nodejs\\node.exe",
+    args: ["C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js"],
+  });
+  assert.deepEqual(helpers.npmInvocation({
+    environment: {},
+    execPath: "/opt/node/bin/node",
+    platform: "linux",
+    realpath() {
+      throw new Error("npm launcher is absent");
+    },
+  }), {
+    command: "/opt/node/bin/node",
+    args: ["/opt/node/lib/node_modules/npm/bin/npm-cli.js"],
+  });
 });
 
 test("isolated package-smoke environment is allowlist-only", () => {

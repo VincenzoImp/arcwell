@@ -15,7 +15,9 @@ import test from "node:test";
 import { DefaultResourceLoader, SettingsManager } from "@earendil-works/pi-coding-agent";
 
 const helpersUrl = new URL("../../scripts/package-smoke-helpers.mjs", import.meta.url);
-const { npmCommand } = await import(helpersUrl.href) as { npmCommand(platform?: NodeJS.Platform): string };
+const { npmInvocation } = await import(helpersUrl.href) as {
+  npmInvocation(): { command: string; args: string[] };
+};
 
 const repositoryRoot = process.cwd();
 const temporaryRoot = join(repositoryRoot, ".tmp-tests");
@@ -35,7 +37,9 @@ interface PackResult {
 }
 
 function runPack(extraArguments: readonly string[]): PackResult {
-  const output = execFileSync(npmCommand(), [
+  const npm = npmInvocation();
+  const output = execFileSync(npm.command, [
+    ...npm.args,
     "pack",
     "--json",
     "--ignore-scripts",

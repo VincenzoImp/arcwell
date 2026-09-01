@@ -42,7 +42,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "npm run clean && tsc -p tsconfig.json",
     "prepack": "npm --silent run build",
-    "test": "npm run build && node --test dist/test/*.test.js",
+    "test": "npm run build && node --import ./dist/test/bootstrap.js --test \"dist/test/*.test.js\"",
     "test:model": "npm run build && node --test --test-concurrency=1 dist/test/model-smoke.test.js dist/test/worker-model-smoke.test.js",
     "test:packages": "npm run build && node scripts/pi-package-smoke.mjs",
     "check": "npm test"

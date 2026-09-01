@@ -1,3 +1,6 @@
+import { realpathSync } from "node:fs";
+import { posix, win32 } from "node:path";
+
 const PROCESS_ENVIRONMENT_KEYS = [
   "PATH",
   "Path",
@@ -56,8 +59,25 @@ const PROCESS_ENVIRONMENT_KEYS = [
 
 const INSTALL_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall"];
 
-export function npmCommand(platform = process.platform) {
-  return platform === "win32" ? "npm.cmd" : "npm";
+export function npmInvocation({
+  environment = process.env,
+  execPath = process.execPath,
+  platform = process.platform,
+  realpath = realpathSync,
+} = {}) {
+  let npmCli = environment.npm_execpath;
+  if (!npmCli && platform !== "win32") {
+    try {
+      const resolvedLauncher = realpath(posix.join(posix.dirname(execPath), "npm"));
+      if (/\.(?:cjs|mjs|js)$/.test(resolvedLauncher)) npmCli = resolvedLauncher;
+    } catch {
+      // Fall through to the standard Node distribution layout.
+    }
+  }
+  npmCli ||= platform === "win32"
+    ? win32.join(win32.dirname(execPath), "node_modules", "npm", "bin", "npm-cli.js")
+    : posix.resolve(posix.dirname(execPath), "..", "lib", "node_modules", "npm", "bin", "npm-cli.js");
+  return { command: execPath, args: [npmCli] };
 }
 
 export function createIsolatedEnvironment(source, { home, agentDir, npmCache, npmConfig }) {
