@@ -64,7 +64,7 @@ function allowedPayloadPath(path: string): boolean {
     /^skills\/[a-z-]+\/SKILL\.md$/,
     /^skills\/web\/(?:search|fetch)\.sh$/,
     /^agents\/(?:scout|planner|worker|reviewer)\.md$/,
-    /^prompts\/(?:implement|implement-and-review|scout-and-plan)\.md$/,
+    /^prompts\/[a-z-]+\.md$/,
     /^extensions\/upstream\/(?:[a-z-]+\/)?[a-z-]+\.ts$/,
     /^dist\/src\/.*\.js$/,
     /^dist\/extensions\/(?:arcwell-memory|arcwell-protections|effects)\.js$/,
@@ -161,7 +161,7 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         .filter((prompt) => belongsTo(packageRoot, prompt.filePath))
         .map((prompt) => prompt.name)
         .sort(),
-      ["implement", "implement-and-review", "scout-and-plan"],
+      ["autonomous", "implement", "implement-and-review", "quick", "scout-and-plan"],
     );
     assert.equal(existsSync(agentDir), false, "resource discovery must not create Pi state");
 

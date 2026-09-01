@@ -52,8 +52,10 @@
       "./skills/web/SKILL.md"
     ],
     "prompts": [
+      "./prompts/autonomous.md",
       "./prompts/implement.md",
       "./prompts/implement-and-review.md",
+      "./prompts/quick.md",
       "./prompts/scout-and-plan.md"
     ]
   },

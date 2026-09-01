@@ -129,7 +129,7 @@ try {
     const expected = [
       ["extension", extensions.extensions.filter(fromCheckout).length, 8],
       ["skill", skills.skills.filter(fromCheckout).length, 13],
-      ["prompt", prompts.prompts.filter(fromCheckout).length, 3],
+      ["prompt", prompts.prompts.filter(fromCheckout).length, 5],
     ];
     for (const [kind, actual, wanted] of expected) {
       if (actual !== wanted) {

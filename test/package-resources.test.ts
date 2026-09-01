@@ -70,7 +70,13 @@ test("package manifest declares the exact native Pi resource set", () => {
       "./skills/verification/SKILL.md",
       "./skills/web/SKILL.md",
     ],
-    prompts: ["./prompts/implement.md", "./prompts/implement-and-review.md", "./prompts/scout-and-plan.md"],
+    prompts: [
+      "./prompts/autonomous.md",
+      "./prompts/implement.md",
+      "./prompts/implement-and-review.md",
+      "./prompts/quick.md",
+      "./prompts/scout-and-plan.md",
+    ],
   });
 });
 
@@ -159,7 +165,7 @@ test("DefaultResourceLoader discovers only package resources without project lea
     const prompts = loader.getPrompts().prompts;
     assert.deepEqual(
       prompts.filter((prompt) => belongsToPackage(prompt.filePath)).map((prompt) => prompt.name).sort(),
-      ["implement", "implement-and-review", "scout-and-plan"],
+      ["autonomous", "implement", "implement-and-review", "quick", "scout-and-plan"],
     );
     assert.equal(skills.some((skill) => skill.name === "leak"), false);
     assert.equal(prompts.some((prompt) => prompt.name === "leak"), false);
