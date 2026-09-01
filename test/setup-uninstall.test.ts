@@ -58,6 +58,7 @@ function writeState(root: string, installedPackageSources = [arcwellSource, owne
     arcwellVersion: "0.1.0",
     manifestDigest: "a".repeat(64),
     installedPackageSources,
+    installedResources: [],
     selectedPackageSources: [...installedPackageSources],
     workingAgreementDigest: workingAgreementDigest(agreement),
     workingAgreementExisted: true,

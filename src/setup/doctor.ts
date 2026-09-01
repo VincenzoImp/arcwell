@@ -8,6 +8,7 @@ import { PACKAGE_CATALOG } from "./catalog.js";
 import { assertNoSymbolicLinkComponents, parseRuntimeConfigJson } from "./config.js";
 import { ARCWELL_VERSION } from "./manifest.js";
 import { readOwnership, type ArcwellOwnership } from "./ownership.js";
+import { verifyManagedResources } from "./managed-resources.js";
 import { assertArcwellPackageHealthy } from "./package-health.js";
 import {
   ARCWELL_PACKAGE_SOURCE,
@@ -153,6 +154,21 @@ export async function runDoctor(
     checks.push({ id: "agreement", status: "ok", message: "Working agreement markers and digest match ownership", path: AGREEMENT_LOGICAL_PATH });
   } catch {
     checks.push({ id: "agreement", status: "error", message: "Working agreement markers or digest do not match ownership", path: AGREEMENT_LOGICAL_PATH });
+  }
+
+  if (ownership) {
+    const mismatched = verifyManagedResources(dependencies.agentDir, ownership.installedResources);
+    checks.push(mismatched.length === 0
+      ? {
+        id: "resources",
+        status: "ok",
+        message: `All ${ownership.installedResources.length} managed files match ownership`,
+      }
+      : {
+        id: "resources",
+        status: "error",
+        message: `Managed files no longer match ownership: ${mismatched.join(", ")}`,
+      });
   }
 
   if (installed) {

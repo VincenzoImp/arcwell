@@ -20,6 +20,7 @@ const ownership: ArcwellOwnership = {
   arcwellVersion: "0.1.0",
   manifestDigest: digest,
   installedPackageSources: [ARCWELL_PACKAGE_SOURCE],
+  installedResources: [],
   selectedPackageSources: [ARCWELL_PACKAGE_SOURCE, "npm:@spences10/pi-lsp@0.0.46"],
   workingAgreementDigest: "b".repeat(64),
   workingAgreementExisted: true,

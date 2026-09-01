@@ -56,6 +56,7 @@ function writeHealthyState(
     arcwellVersion: ARCWELL_VERSION,
     manifestDigest: "a".repeat(64),
     installedPackageSources: [...installedSources],
+    installedResources: [],
     selectedPackageSources: [...selectedSources],
     workingAgreementDigest: workingAgreementDigest(agreement),
     workingAgreementExisted: true,

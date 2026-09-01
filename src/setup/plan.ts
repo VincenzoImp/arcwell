@@ -3,7 +3,7 @@ import { ARCWELL_VERSION, manifestDigest } from "./manifest.js";
 import { ARCWELL_PACKAGE_SOURCE } from "./package-source.js";
 import { protectionNames, type SetupManifest } from "./types.js";
 
-export type SetupOperationKind = "install-package" | "merge-agreement" | "write-config";
+export type SetupOperationKind = "install-package" | "merge-agreement" | "install-resources" | "write-config";
 
 export interface SetupOperation {
   id: string;
@@ -46,6 +46,12 @@ export function createSetupPlan(manifest: SetupManifest): SetupPlan {
       source: "content/AGENTS.md",
       destination: "$PI_CODING_AGENT_DIR/AGENTS.md",
       description: "Merge the marked Arcwell working agreement block",
+    },
+    {
+      id: "resources.arcwell",
+      kind: "install-resources",
+      destination: "$PI_CODING_AGENT_DIR/{agents,presets.json}",
+      description: "Install the subagent definitions and presets Pi loads from the agent directory",
     },
     {
       id: "config.arcwell",

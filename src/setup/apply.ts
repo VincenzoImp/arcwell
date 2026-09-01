@@ -22,6 +22,11 @@ import {
   writeRuntimeConfigAtomic,
 } from "./config.js";
 import { ARCWELL_VERSION } from "./manifest.js";
+import {
+  installManagedResources,
+  verifyManagedResources,
+  type ManagedResource,
+} from "./managed-resources.js";
 import { assertArcwellPackageHealthy } from "./package-health.js";
 import {
   ARCWELL_PACKAGE_SOURCE,
@@ -49,6 +54,8 @@ export interface ApplySetupDependencies {
   agentDir: string;
   piClient: PiClient;
   workingAgreement: string;
+  /** Whole files installed into the agent directory: subagent definitions and presets. */
+  managedResources?: readonly ManagedResource[];
   writeRuntimeConfig?: (path: string, config: RuntimeConfig) => void;
 }
 
@@ -131,6 +138,7 @@ export async function applySetup(
   signal?: AbortSignal,
 ): Promise<ArcwellOwnership> {
   const { agentDir, piClient, workingAgreement } = dependencies;
+  const managedResources = dependencies.managedResources ?? [];
   const writeConfig = dependencies.writeRuntimeConfig ?? writeRuntimeConfigAtomic;
   const agreementPath = join(agentDir, "AGENTS.md");
   const arcwellDirectory = join(agentDir, "arcwell");
@@ -173,6 +181,9 @@ export async function applySetup(
       initiallyInstalledUserSources.push(source);
     }
 
+    for (const resource of managedResources) changedFiles.push(snapshotFile(join(agentDir, resource.path)));
+    const installedResources = installManagedResources(agentDir, managedResources);
+
     changedFiles.push(agreementSnapshot);
     mergeWorkingAgreement(agreementPath, workingAgreement);
     changedFiles.push(configSnapshot);
@@ -197,6 +208,7 @@ export async function applySetup(
       manifestDigest: createSetupPlan(manifest).manifestDigest,
       installedPackageSources: ownedSources,
       selectedPackageSources: [...desired],
+      installedResources,
       workingAgreementDigest: agreementDigest,
       workingAgreementExisted,
       workingAgreementEndedWithNewline,
@@ -228,6 +240,10 @@ export async function applySetup(
     }
     if (!readFileSync(agreementPath, "utf8").includes(workingAgreement.trim())) {
       throw new Error("setup health check: working agreement mismatch");
+    }
+    const mismatched = verifyManagedResources(agentDir, installedResources);
+    if (mismatched.length > 0) {
+      throw new Error(`setup health check: managed resource mismatch (${mismatched.join(", ")})`);
     }
     return ownership;
   } catch (error) {

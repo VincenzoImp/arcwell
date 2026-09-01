@@ -14,6 +14,7 @@ import { basename, dirname, join } from "node:path";
 
 import { assertNoSymbolicLinkComponents } from "./config.js";
 import { assertNoDuplicateJsonProperties } from "./manifest.js";
+import type { ManagedResourceRecord } from "./managed-resources.js";
 import { ARCWELL_PACKAGE_SOURCE } from "./package-source.js";
 
 export const MAX_OWNERSHIP_BYTES = 64 * 1024;
@@ -24,6 +25,7 @@ export interface ArcwellOwnership {
   manifestDigest: string;
   installedPackageSources: string[];
   selectedPackageSources: string[];
+  installedResources: ManagedResourceRecord[];
   workingAgreementDigest: string;
   workingAgreementExisted: boolean;
   workingAgreementEndedWithNewline: boolean;
@@ -36,11 +38,14 @@ const allowedProperties = [
   "manifestDigest",
   "installedPackageSources",
   "selectedPackageSources",
+  "installedResources",
   "workingAgreementDigest",
   "workingAgreementExisted",
   "workingAgreementEndedWithNewline",
   "arcwellDirectoryExisted",
 ] as const;
+const resourceProperties = ["path", "digest", "existedBefore"] as const;
+const relativeResourcePath = /^[a-z0-9][a-z0-9/._-]*$/;
 const digestPattern = /^[a-f0-9]{64}$/;
 const exactNpmSource = /^npm:(?:@[^/@]+\/)?[^/@]+@\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -72,6 +77,25 @@ export function parseOwnership(value: unknown): ArcwellOwnership {
   if (installedPackageSources.some((source) => !selectedPackageSources.includes(source))) {
     throw new Error("installedPackageSources: expected a subset of selectedPackageSources");
   }
+  if (!Array.isArray(value.installedResources)) throw new Error("installedResources: expected an array");
+  const installedResources = value.installedResources.map((entry, index) => {
+    const label = `installedResources[${index}]`;
+    if (!isRecord(entry)) throw new Error(`${label}: expected an object`);
+    const unknownKey = Object.keys(entry).find((key) => !resourceProperties.includes(key as (typeof resourceProperties)[number]));
+    if (unknownKey) throw new Error(`${label}.${unknownKey}: unknown property`);
+    // A path that escapes the agent directory would let uninstall delete outside it.
+    if (typeof entry.path !== "string" || !relativeResourcePath.test(entry.path) || entry.path.includes("..")) {
+      throw new Error(`${label}.path: expected a relative path inside the agent directory`);
+    }
+    if (typeof entry.digest !== "string" || !digestPattern.test(entry.digest)) {
+      throw new Error(`${label}.digest: expected a sha256 digest`);
+    }
+    if (typeof entry.existedBefore !== "boolean") throw new Error(`${label}.existedBefore: expected a boolean`);
+    return { path: entry.path, digest: entry.digest, existedBefore: entry.existedBefore };
+  });
+  if (new Set(installedResources.map((entry) => entry.path)).size !== installedResources.length) {
+    throw new Error("installedResources: duplicate path");
+  }
   if (typeof value.workingAgreementDigest !== "string" || !digestPattern.test(value.workingAgreementDigest)) {
     throw new Error("workingAgreementDigest: expected a sha256 digest");
   }
@@ -90,6 +114,7 @@ export function parseOwnership(value: unknown): ArcwellOwnership {
     manifestDigest: value.manifestDigest,
     installedPackageSources,
     selectedPackageSources,
+    installedResources,
     workingAgreementDigest: value.workingAgreementDigest,
     workingAgreementExisted: value.workingAgreementExisted,
     workingAgreementEndedWithNewline: value.workingAgreementEndedWithNewline,

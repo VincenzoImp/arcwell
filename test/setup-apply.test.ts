@@ -374,3 +374,43 @@ test("apply compensates only invocation changes after a failure", async () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("managed resources are installed, recorded, and compensated on failure", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "apply-managed-resources-"));
+  try {
+    const managedResources = [
+      { path: "agents/scout.md", content: "---\nname: scout\n---\nrecon\n" },
+      { path: "presets.json", content: '{"presets":{}}\n' },
+    ];
+    const ownership = await applySetup(createDefaultManifest(), {
+      agentDir: root,
+      piClient: new FakePiClient(),
+      workingAgreement: agreement,
+      managedResources,
+    });
+
+    // Pi's manifest has no `agents` key, so this install is the only thing that makes the
+    // subagent definitions reachable at all.
+    assert.equal(readFileSync(join(root, "agents", "scout.md"), "utf8"), managedResources[0]!.content);
+    assert.equal(readFileSync(join(root, "presets.json"), "utf8"), managedResources[1]!.content);
+    assert.deepEqual(ownership.installedResources.map((entry) => entry.path), ["agents/scout.md", "presets.json"]);
+    assert.deepEqual(ownership.installedResources.map((entry) => entry.existedBefore), [false, false]);
+
+    const failing = mkdtempSync(join(temporaryRoot, "apply-managed-compensate-"));
+    try {
+      await assert.rejects(applySetup(createDefaultManifest(), {
+        agentDir: failing,
+        piClient: new FakePiClient(),
+        workingAgreement: agreement,
+        managedResources,
+        writeRuntimeConfig: () => { throw new Error("injected config failure"); },
+      }), /injected config failure/);
+      assert.equal(existsSync(join(failing, "agents", "scout.md")), false, "compensation removes what it created");
+      assert.equal(existsSync(join(failing, "presets.json")), false);
+    } finally {
+      rmSync(failing, { recursive: true, force: true });
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -6,6 +7,7 @@ import type { CommandIo } from "../commands/types.js";
 import { resolveArcwellAgentDir } from "./agent-dir.js";
 import { applySetup } from "./apply.js";
 import { createDefaultManifest, loadSetupManifest } from "./manifest.js";
+import { loadManagedResources } from "./managed-resources.js";
 import { createPiClient } from "./pi-client.js";
 import { createSetupPlan } from "./plan.js";
 import type { SetupManifest } from "./types.js";
@@ -28,11 +30,12 @@ export function defaultSetupAgentDir(): string {
 
 async function applyWithDefaults(manifest: SetupManifest, signal?: AbortSignal): Promise<void> {
   const agentDir = defaultSetupAgentDir();
-  const agreementPath = fileURLToPath(new URL("../../../content/AGENTS.md", import.meta.url));
+  const packageRoot = fileURLToPath(new URL("../../../", import.meta.url));
   await applySetup(manifest, {
     agentDir,
     piClient: createPiClient({ executable: "pi" }),
-    workingAgreement: readFileSync(agreementPath, "utf8"),
+    workingAgreement: readFileSync(join(packageRoot, "content", "AGENTS.md"), "utf8"),
+    managedResources: loadManagedResources(packageRoot),
   }, signal);
 }
 

@@ -8,6 +8,7 @@ import { resolveArcwellAgentDir } from "./agent-dir.js";
 import { PACKAGE_CATALOG } from "./catalog.js";
 import { assertNoSymbolicLinkComponents, parseRuntimeConfigJson } from "./config.js";
 import { ARCWELL_VERSION } from "./manifest.js";
+import { removeManagedResources } from "./managed-resources.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import { ARCWELL_PACKAGE_SOURCE, packageSourceIdentity } from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
@@ -20,6 +21,9 @@ export interface UninstallDependencies {
 
 export interface UninstallResult {
   removedPackageSources: string[];
+  removedResources: string[];
+  /** Managed files left in place because they no longer match what Arcwell installed. */
+  keptResources: string[];
 }
 
 export type ConfirmUninstall = (prompt: string, signal?: AbortSignal) => Promise<boolean>;
@@ -157,6 +161,7 @@ async function uninstallArcwellInternal(
   const installedUserSources = userSourceSet(installed);
   const targets = ownership.installedPackageSources.filter((source) => installedUserSources.has(source));
   const removed: string[] = [];
+  let resourceOutcome: { removed: string[]; kept: string[] } = { removed: [], kept: [] };
   for (let index = 0; index < targets.length; index += 1) {
     const source = targets[index]!;
     try {
@@ -185,6 +190,7 @@ async function uninstallArcwellInternal(
     }
 
     throwIfAborted(signal);
+    resourceOutcome = removeManagedResources(dependencies.agentDir, ownership.installedResources);
     removeRegularFile(configPath);
     removeRegularFile(ownershipPath);
   } catch (error) {
@@ -205,7 +211,11 @@ async function uninstallArcwellInternal(
     throw new Error(failureMessage(error, removed, []));
   }
 
-  return { removedPackageSources: removed };
+  return {
+    removedPackageSources: removed,
+    removedResources: resourceOutcome.removed,
+    keptResources: resourceOutcome.kept,
+  };
 }
 
 export async function uninstallArcwell(
@@ -284,6 +294,9 @@ export async function handleUninstallCommand(
     }
   }
   const result = await (dependencies.run ?? uninstallWithDefaults)(signal);
-  io.stdout(`Arcwell uninstall complete (${result.removedPackageSources.length} owned packages removed)\n`);
+  io.stdout(`Arcwell uninstall complete (${result.removedPackageSources.length} owned packages and ${result.removedResources.length} managed files removed)\n`);
+  if (result.keptResources.length > 0) {
+    io.stdout(`Kept modified managed files: ${result.keptResources.join(", ")}\n`);
+  }
   return 0;
 }

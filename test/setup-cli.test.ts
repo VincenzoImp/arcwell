@@ -217,7 +217,7 @@ test("TTY uninstall requires injected confirmation while --yes skips it", async 
   assert.equal(await handleUninstallCommand(["uninstall"], io, {
     isTTY: true,
     confirm: async (prompt) => { prompts.push(prompt); return true; },
-    run: async () => { runs += 1; return { removedPackageSources: [] }; },
+    run: async () => { runs += 1; return { removedPackageSources: [], removedResources: [], keptResources: [] }; },
   }), 0);
   assert.equal(runs, 1);
   assert.match(prompts.join(""), /remove.*Arcwell/i);
@@ -225,14 +225,14 @@ test("TTY uninstall requires injected confirmation while --yes skips it", async 
   assert.equal(await handleUninstallCommand(["uninstall"], io, {
     isTTY: true,
     confirm: async () => false,
-    run: async () => { runs += 1; return { removedPackageSources: [] }; },
+    run: async () => { runs += 1; return { removedPackageSources: [], removedResources: [], keptResources: [] }; },
   }), 0);
   assert.equal(runs, 1);
 
   assert.equal(await handleUninstallCommand(["uninstall", "--yes"], io, {
     isTTY: true,
     confirm: async () => { throw new Error("--yes must skip confirmation"); },
-    run: async () => { runs += 1; return { removedPackageSources: [] }; },
+    run: async () => { runs += 1; return { removedPackageSources: [], removedResources: [], keptResources: [] }; },
   }), 0);
   assert.equal(runs, 2);
 });
@@ -244,7 +244,7 @@ test("non-TTY uninstall requires --yes before injected mutation", async () => {
     stderr: () => undefined,
   }, {
     isTTY: false,
-    run: async () => { called = true; return { removedPackageSources: [] }; },
+    run: async () => { called = true; return { removedPackageSources: [], removedResources: [], keptResources: [] }; },
   }), /non-TTY.*--yes/);
   assert.equal(called, false);
 
@@ -254,7 +254,7 @@ test("non-TTY uninstall requires --yes before injected mutation", async () => {
     stderr: () => undefined,
   }, {
     isTTY: false,
-    run: async () => ({ removedPackageSources: [ARCWELL_PACKAGE_SOURCE] }),
+    run: async () => ({ removedPackageSources: [ARCWELL_PACKAGE_SOURCE], removedResources: [], keptResources: [] }),
   }), 0);
   assert.match(output.join(""), /uninstall complete/);
 });
