@@ -36,3 +36,10 @@ N Critical, N Important, N Minor
 Overall assessment in 2-3 sentences.
 
 Be specific with file paths and line numbers.
+
+Every finding carries the input or state that makes it fail. A finding you cannot make fail is
+a preference: say it in one line under Minor, or drop it.
+
+When the dispatch supplies an `outputSchema`, return the findings through it as well. The
+headings above are for the human reading along; the fix pass should consume fields, not parse
+prose, and a review that arrives only as paragraphs cannot be acted on without re-reading it.

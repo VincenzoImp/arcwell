@@ -55,6 +55,17 @@ code to write, or a single-file mechanical fix.
 | **NEEDS_CONTEXT** | supply what was missing and re-dispatch |
 | **BLOCKED** | something must change: more context, a more capable model, a smaller task, or a correction to the plan. Re-dispatching the same task to the same model unchanged repeats the failure |
 
+## Ask for data, not prose
+
+A review that comes back as paragraphs has to be re-read and interpreted before it can drive a
+fix, and that interpretation is where findings get softened or lost. Dispatch reviews with an
+`outputSchema` so the findings arrive as fields — severity, file, line, failure scenario — and
+set `acceptance: "attested"` so a child that finishes without a structured report is marked
+`claimed` rather than accepted.
+
+The same applies to any child whose result feeds a decision. Prose is for the human reading
+along; the next step should consume data.
+
 ## Reviewing what comes back
 
 Read the diff. The report tells you what the subagent believes it did.
