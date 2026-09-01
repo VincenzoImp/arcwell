@@ -173,18 +173,21 @@ test("Arcwell declares separate prepare and explicit networked Git-source smokes
   assert.equal(manifest.scripts?.["test:prepare"], "node scripts/prepare-smoke.mjs");
   assert.equal(manifest.scripts?.["test:git-source"], "node scripts/git-source-smoke.mjs");
   assert.equal(manifest.scripts?.["test:git-install"], undefined);
+  // The Git-source install runs prepare with --omit=dev, so the compiler and its types ship
+  // as runtime dependencies. Nothing else does.
   assert.deepEqual({
     typescript: manifest.dependencies?.typescript,
     nodeTypes: manifest.dependencies?.["@types/node"],
-    ajv: manifest.dependencies?.ajv,
   }, {
     typescript: "6.0.3",
     nodeTypes: "26.4.0",
-    ajv: "8.20.0",
   });
+  // Pruned with the experimental layer; asserted absent so they cannot drift back in.
+  for (const pruned of ["ajv", "typebox", "@earendil-works/pi-ai"]) {
+    assert.equal(manifest.dependencies?.[pruned], undefined, `${pruned} must stay pruned`);
+  }
   assert.equal(manifest.devDependencies?.typescript, undefined);
   assert.equal(manifest.devDependencies?.["@types/node"], undefined);
-  assert.equal(manifest.devDependencies?.ajv, undefined);
   assert.equal(manifest.devDependencies?.["typescript-language-server"], "6.0.0");
 
   const prepareSmoke = readFileSync(join(process.cwd(), "scripts", "prepare-smoke.mjs"), "utf8");

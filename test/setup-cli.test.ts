@@ -17,20 +17,20 @@ mkdirSync(temporaryRoot, { recursive: true });
 
 const cli = join(here, "..", "src", "cli.js");
 
-test("public help exposes lifecycle commands and moves old workflows under experimental", () => {
+test("public help exposes the lifecycle commands and rejects the retired ones", () => {
   const help = execFileSync(process.execPath, [cli, "--help"], { encoding: "utf8" });
   assert.match(help, /arcwell setup/);
   assert.match(help, /arcwell doctor/);
   assert.match(help, /arcwell uninstall/);
-  assert.match(help, /arcwell experimental <command>/);
-  assert.match(help, /Experimental manifest and workflow commands/);
-  assert.doesNotMatch(help, /^\s*arcwell init/m);
+  assert.doesNotMatch(help, /experimental/);
 
-  const direct = spawnSync(process.execPath, [cli, "init"], { encoding: "utf8" });
-  assert.equal(direct.status, 2);
-  assert.match(direct.stderr, /unknown command: init/);
-  const experimental = execFileSync(process.execPath, [cli, "experimental", "init"], { encoding: "utf8" });
-  assert.equal(JSON.parse(experimental).profile, "core");
+  // The experimental namespace and its commands were removed with the workflow layer;
+  // each must now fail as unknown rather than resolve to anything.
+  for (const retired of ["experimental", "init", "plan", "capabilities", "schema", "workflows"]) {
+    const attempt = spawnSync(process.execPath, [cli, retired], { encoding: "utf8" });
+    assert.equal(attempt.status, 2, `${retired} must not resolve to a command`);
+    assert.match(attempt.stderr, new RegExp(`unknown command: ${retired}`));
+  }
 });
 
 test("setup --dry-run is deterministic and writes nothing", () => {
