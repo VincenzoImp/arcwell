@@ -37,6 +37,7 @@ test("package manifest declares the exact native Pi resource set", () => {
     "prompts/*.md",
     "docs/*.md",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
   ]);

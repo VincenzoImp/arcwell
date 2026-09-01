@@ -55,6 +55,7 @@ function runPack(extraArguments: readonly string[]): PackResult {
 function allowedPayloadPath(path: string): boolean {
   return [
     /^README\.md$/,
+    /^CHANGELOG\.md$/,
     /^LICENSE$/,
     /^NOTICE$/,
     /^package\.json$/,

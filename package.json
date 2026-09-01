@@ -16,6 +16,7 @@
     "prompts/*.md",
     "docs/*.md",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "NOTICE"
   ],
