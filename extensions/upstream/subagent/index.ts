@@ -1,21 +1,11 @@
 /**
  * Subagent Tool - Delegate tasks to specialized agents
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), unmodified, from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), unmodified, from
  * examples/extensions/subagent/index.ts. See NOTICE.
  *
- * This is what backs config/agents/*.md and the three workflow prompts in
- * config/prompts/, all of which this repository ships and installs.
- *
- * Spawns a separate `pi` process for each subagent invocation,
- * giving it an isolated context window.
- *
- * Supports three modes:
- *   - Single: { agent: "name", task: "..." }
- *   - Parallel: { tasks: [{ agent: "name", task: "..." }, ...] }
- *   - Chain: { chain: [{ agent: "name", task: "... {previous} ..." }, ...] }
- *
- * Uses JSON mode to capture structured output from subagents.
+ * This is what backs the four agent definitions setup installs into <agentDir>/agents
+ * and the prompt chains that dispatch them.
  */
 
 import { spawn } from "node:child_process";
@@ -523,7 +513,12 @@ export default function (pi: ExtensionAPI) {
 				};
 			}
 
-			if ((agentScope === "project" || agentScope === "both") && confirmProjectAgents && ctx.hasUI) {
+			if (
+				(agentScope === "project" || agentScope === "both") &&
+				confirmProjectAgents &&
+				ctx.hasUI &&
+				!ctx.isProjectTrusted()
+			) {
 				const requestedAgentNames = new Set<string>();
 				if (params.chain) for (const step of params.chain) requestedAgentNames.add(step.agent);
 				if (params.tasks) for (const t of params.tasks) requestedAgentNames.add(t.agent);

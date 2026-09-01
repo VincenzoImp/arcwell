@@ -38,6 +38,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Check redistributed upstream extensions for drift
+        run: npm run check:upstream
+
       - name: Smoke-test prepare build from a clean local copy
         run: npm run test:prepare
 

@@ -1,11 +1,11 @@
 /**
  * Todo Extension
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), unmodified, from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), unmodified, from
  * examples/extensions/todo.ts. See NOTICE.
  *
- * Registers the `todo` tool that config/presets.json grants to the implementation
- * preset and config/agents/worker.md lists in its own tool set, plus a `/todos`
+ * Registers the `todo` tool that presets.json grants to the implementation
+ * preset and the worker agent definition lists in its own tool set, plus a `/todos`
  * command for users to view the list.
  *
  * State is stored in tool result details (not external files), which allows

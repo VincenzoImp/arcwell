@@ -1,13 +1,13 @@
 /**
  * Tools Extension
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), unmodified, from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), unmodified, from
  * examples/extensions/tools.ts. See NOTICE.
  *
  * Provides a /tools command to enable/disable tools interactively.
  * Tool selection persists across session reloads and respects branch navigation.
  *
- * config/presets.json sets a tool list when you switch preset; /tools is the
+ * presets.json sets a tool list when you switch preset; /tools is the
  * one-off narrowing that does not also change the model and thinking level.
  */
 

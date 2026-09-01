@@ -10,11 +10,17 @@ Pi coding agent — example extensions
 Upstream:  @earendil-works/pi-coding-agent
 Project:   https://github.com/earendil-works/pi
 Path:      packages/coding-agent/examples/extensions/
+Version:   0.84.4
 Licence:   MIT, Copyright (c) 2025 Mario Zechner
 
 Redistributed as TypeScript and loaded by Pi's own runtime, so they are neither
 compiled nor held to this project's compiler strictness (see tsconfig.json).
 Each file carries the same provenance in its own header.
+
+`npm run check:upstream` compares them against the examples in the installed Pi
+and fails on any difference this file does not record. Without it the copies age
+silently: they are not compiled, not type-checked, and the tests only prove they
+load.
 
 Byte-identical to upstream:
 

@@ -1,10 +1,10 @@
 /**
  * Preset Extension
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), unmodified, from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), unmodified, from
  * examples/extensions/preset.ts. See NOTICE.
  *
- * This is what reads config/presets.json, which this repository ships and installs;
+ * This is what reads presets.json, which this repository ships and installs;
  * without it that file configures nothing.
  *
  * Allows defining named presets that configure model, thinking level, tools,

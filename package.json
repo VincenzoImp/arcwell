@@ -72,7 +72,8 @@
     "test:packages": "npm run build && node scripts/pi-package-smoke.mjs",
     "test:prepare": "node scripts/prepare-smoke.mjs",
     "test:git-source": "node scripts/git-source-smoke.mjs",
-    "check": "npm test"
+    "check": "npm test && npm run check:upstream",
+    "check:upstream": "node scripts/check-upstream.mjs"
   },
   "dependencies": {
     "@types/node": "26.4.0",

@@ -1,10 +1,10 @@
 /**
  * Questionnaire Tool - Unified tool for asking single or multiple questions
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), unmodified, from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), unmodified, from
  * examples/extensions/questionnaire.ts. See NOTICE.
  *
- * Registers the `questionnaire` tool that config/presets.json grants to the
+ * Registers the `questionnaire` tool that presets.json grants to the
  * implementation preset.
  *
  * Single question: simple options list

@@ -1,7 +1,7 @@
 /**
  * Plan Mode Extension
  *
- * Vendored from @earendil-works/pi-coding-agent 0.84.2 (MIT), from
+ * Vendored from @earendil-works/pi-coding-agent 0.84.4 (MIT), from
  * examples/extensions/plan-mode/index.ts, with one local change: the command is
  * registered as /plan-todos, because todo.ts already owns /todos and the second
  * registration would shadow it. See NOTICE.
