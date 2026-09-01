@@ -102,7 +102,7 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
   const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
   try {
     writeHealthyState(root);
-    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.1.0";
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.2.0";
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push({
       ...fixturePiPackage(equivalentSource),
@@ -146,7 +146,8 @@ test("doctor errors for selected packages missing at user scope and exact versio
     writeHealthyState(root);
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push(fixturePiPackage(arcwellSource, "project"));
-    packages.push(fixturePiPackage("git:github.com/VincenzoImp/arcwell@v0.2.0"));
+    // A different ref of the same repository is the conflict this asserts.
+    packages.push(fixturePiPackage("git:github.com/VincenzoImp/arcwell@v0.1.0"));
     const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
 
     assert.equal(report.exitStatus, 2);

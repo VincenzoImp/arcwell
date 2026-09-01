@@ -1,6 +1,6 @@
 # Arcwell
 
-Arcwell is a reproducible, batteries-included environment for Pi. Version `0.1.0` is distributed
+Arcwell is a reproducible, batteries-included environment for Pi. Version `0.2.0` is distributed
 from its pinned GitHub source; the npm package is not published. Its commands are `setup`,
 `doctor`, and `uninstall`.
 
@@ -11,7 +11,7 @@ extensions, then composes the rest from exact package sources through Pi.
 
 - Node.js `>=24.15.0`.
 - Pi `0.84.4` for the currently audited lifecycle and package APIs.
-- No npm release exists. Installation uses the exact GitHub `v0.1.0` ref instead.
+- No npm release exists. Installation uses the exact GitHub `v0.2.0` ref instead.
 - A real-package Pi smoke passed on macOS. Linux and Windows smoke evidence remains pending; no
   cross-platform support claim follows until both checked-in CI jobs pass.
 
@@ -20,10 +20,10 @@ extensions, then composes the rest from exact package sources through Pi.
 When the installed npm version supports GitHub shorthands, the recommended no-npm-release setup is:
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.1.0 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.2.0 setup --dry-run --write-manifest arcwell.json
 # Review arcwell.json and the dry-run output.
-npx github:VincenzoImp/arcwell#v0.1.0 setup --manifest arcwell.json --yes
-npx github:VincenzoImp/arcwell#v0.1.0 doctor
+npx github:VincenzoImp/arcwell#v0.2.0 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.2.0 doctor
 ```
 
 Arcwell is not published to the npm registry: `npx` obtains this exact GitHub ref and npm runs the
@@ -31,7 +31,7 @@ package's documented `prepare` build. To install only Arcwell's native Pi resour
 Pi's exact Git source:
 
 ```bash
-pi install git:github.com/VincenzoImp/arcwell@v0.1.0
+pi install git:github.com/VincenzoImp/arcwell@v0.2.0
 ```
 
 The stable setup behavior is described below. Interactive setup is `arcwell setup`. A non-TTY mutation requires both `--manifest <file>` and
@@ -47,11 +47,11 @@ arcwell doctor [--json]
 arcwell uninstall [--yes]
 ```
 
-Setup asks Pi to install `git:github.com/VincenzoImp/arcwell@v0.1.0`; selected third-party
+Setup asks Pi to install `git:github.com/VincenzoImp/arcwell@v0.2.0`; selected third-party
 packages remain exact npm sources. Pi-supported HTTPS, `git:https://`, SSH URL, and prefixed
 `git:git@github.com:` spellings of that same repository and ref satisfy the selection semantically;
 `www.github.com` normalizes to `github.com`. Raw SCP syntax such as
-`git@github.com:VincenzoImp/arcwell@v0.1.0` has no Git meaning to Pi 0.84.4 without the `git:` prefix
+`git@github.com:VincenzoImp/arcwell@v0.2.0` has no Git meaning to Pi 0.84.4 without the `git:` prefix
 and is treated as a local source. Setup does not
 reinstall or claim ownership of a matching pre-existing source, while another ref for the same
 repository fails preflight before mutation. It merges one marked block into
@@ -191,7 +191,7 @@ Run networked smokes explicitly:
 ```bash
 npm run test:packages
 npm run test:git-source -- main
-npm run test:git-source -- v0.1.0
+npm run test:git-source -- v0.2.0
 ```
 
 The Git-source smoke uses repository-local Pi 0.84.4 in an isolated scratch agent directory with an
@@ -200,7 +200,7 @@ checkout token. It asks Pi to install `git:github.com/VincenzoImp/arcwell@<ref>`
 checks the installed path, package name/version, and default extension, then deletes the scratch
 state. Use `main` only as a live transport smoke after the tested commit has been pushed to main;
 CI therefore runs it only for pushes to `main`, never pull requests. Use the release tag (for
-example `v0.1.0`) after that tag is pushed as the tag-release smoke. A main result does not prove a
+example `v0.2.0`) after that tag is pushed as the tag-release smoke. A main result does not prove a
 tag, and the clean-copy prepare smoke proves neither transport case. The real-package Pi smoke has
 passed on macOS; Linux and Windows remain open release gates.
 
