@@ -37,10 +37,16 @@ const INTENDED_CHANGES = new Map([
   ["plan-mode/index.ts", "registers /plan-todos, because todo.ts owns /todos"],
 ]);
 
-/** Everything after the first block comment: the header is provenance, not code. */
+/**
+ * Everything after the first block comment: the header is provenance, not code.
+ *
+ * Line endings are normalised because a Windows checkout rewrites ours to CRLF while the copy
+ * under node_modules keeps LF, which made every comparable file look drifted. What this check
+ * defends is content, not the separator the working tree happens to use.
+ */
 function body(text) {
   const end = text.indexOf("*/");
-  return (end < 0 ? text : text.slice(end + 2)).trim();
+  return (end < 0 ? text : text.slice(end + 2)).replaceAll("\r\n", "\n").trim();
 }
 
 function typescriptFiles(root) {

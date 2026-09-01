@@ -105,13 +105,18 @@ export function createMemoryHandlers(arcwellDir: string): MemoryHandlers {
   };
 }
 
-interface MemoryContextLike {
-  sessionManager?: { getSessionFile?: () => string | undefined };
-  ui: { notify: (message: string, level: "info" | "warning") => void };
+/**
+ * The slice of Pi's context this file uses. Every member is required, so passing a real
+ * `ExtensionContext` at each call site is itself the compatibility check: if `getSessionFile`
+ * is renamed or dropped upstream, the build fails. Declared optional it would keep compiling
+ * and every session would quietly share the `ephemeral` worklog.
+ */
+interface MemoryContext {
+  sessionManager: { getSessionFile(): string | undefined };
+  ui: { notify(message: string, type?: "info" | "warning" | "error"): void };
 }
 
-const sessionFileOf = (ctx: unknown): string | undefined =>
-  (ctx as MemoryContextLike).sessionManager?.getSessionFile?.();
+const sessionFileOf = (ctx: MemoryContext): string | undefined => ctx.sessionManager.getSessionFile();
 
 export function registerMemoryHandlers(pi: ExtensionAPI, handlers: MemoryHandlers): void {
   pi.registerCommand("worklog", {
