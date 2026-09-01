@@ -138,10 +138,17 @@ try {
 
   console.log("Clean copied checkout passed npm install --omit=dev, prepare build, and DefaultResourceLoader smoke.");
 } finally {
-  rmSync(root, {
-    recursive: true,
-    force: true,
-    maxRetries: process.platform === "win32" ? 20 : 3,
-    retryDelay: 250,
-  });
+  try {
+    rmSync(root, {
+      recursive: true,
+      force: true,
+      maxRetries: process.platform === "win32" ? 20 : 3,
+      retryDelay: 250,
+    });
+  } catch (error) {
+    if (process.platform !== "win32" || error?.code !== "EPERM") throw error;
+    // Windows runners can retain a transient handle after npm/loader success even
+    // beyond fs.rm retries. The CI workspace is ephemeral and contains no secrets.
+    console.warn(`Prepare smoke passed; Windows deferred scratch cleanup: ${root}`);
+  }
 }
