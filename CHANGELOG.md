@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.0
+
+Breaking: ownership gains `subagentOverridesWritten`, so a 0.4.0 ownership file is rejected.
+Run `arcwell uninstall --yes` with 0.4.0 before installing this, or re-run `setup`.
+
+**The working agreement was reaching no subagent at all.** Found by running a real dispatch
+against a local model rather than by reading: a token placed in `<agentDir>/AGENTS.md` came
+back from the parent, and `NONE` from `scout`.
+
+0.4.0 set `inheritProjectContext: true` on `planner` and called the problem fixed. That was the
+wrong field. `pi-subagents` splits the two: `inheritProjectContext` covers a *repository's*
+`AGENTS.md`, while the operator's file under the Pi agent directory — exactly where Arcwell
+merges the agreement — is `inheritGlobalContext`, and it **defaults to false for every builtin**
+(`docs/agents.md:240`). So the standing preferences this environment exists to carry were
+absent from every delegated turn.
+
+### Added
+
+- `planner` sets `inheritGlobalContext: true`.
+- `setup` writes `subagents.agentOverrides.<agent>.inheritGlobalContext` for the four agents its
+  prompts dispatch, and `uninstall` removes it. Only that key, only for those agents, and only
+  when setup was the one to write it: a value the user already chose is left alone in both
+  directions, and unrelated fields on the same agent survive removal.
+
 ## 0.4.0
 
 Breaking: `modules` gains `claudeCli`, and three agent files are gone. Regenerate with

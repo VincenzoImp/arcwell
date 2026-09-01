@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { moduleNames, protectionNames, type ModuleName, type ProtectionName, type SetupManifest } from "./types.js";
 
-export const ARCWELL_VERSION = "0.4.0";
+export const ARCWELL_VERSION = "0.5.0";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);

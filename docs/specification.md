@@ -2,7 +2,7 @@
 
 ## Stable v1 contract
 
-Arcwell `0.4.0` requires Node.js `>=24.15.0` and targets the locally audited Pi `0.84.4` API.
+Arcwell `0.5.0` requires Node.js `>=24.15.0` and targets the locally audited Pi `0.84.4` API.
 The package is currently unpublished. Its exact stable surface is:
 
 ```text
@@ -12,8 +12,8 @@ arcwell uninstall [--yes]
 ```
 
 The npm package is not published. With an npm version that supports GitHub shorthands, bootstrap
-the exact release with `npx github:VincenzoImp/arcwell#v0.4.0 setup`; Pi resources use
-`pi install git:github.com/VincenzoImp/arcwell@v0.4.0`. Generate and inspect input with `setup
+the exact release with `npx github:VincenzoImp/arcwell#v0.5.0 setup`; Pi resources use
+`pi install git:github.com/VincenzoImp/arcwell@v0.5.0`. Generate and inspect input with `setup
 --dry-run --write-manifest arcwell.json`, then apply headlessly with `setup --manifest arcwell.json
 --yes` through the same exact `npx` source. Non-TTY mutation requires both manifest and
 confirmation flags. Dry run and manifest output perform no install, Pi settings mutation, model

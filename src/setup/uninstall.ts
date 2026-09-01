@@ -12,6 +12,7 @@ import { removeManagedResources } from "./managed-resources.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import { ARCWELL_PACKAGE_SOURCE, packageSourceIdentity } from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
+import { removeSubagentOverrides } from "./subagent-overrides.js";
 import { managedWorkingAgreementDigest, removeWorkingAgreement } from "./working-agreement.js";
 
 export interface UninstallDependencies {
@@ -190,6 +191,8 @@ async function uninstallArcwellInternal(
     }
 
     throwIfAborted(signal);
+    // Only when setup wrote it. A user who set inheritGlobalContext themselves keeps it.
+    if (ownership.subagentOverridesWritten) removeSubagentOverrides(dependencies.agentDir);
     resourceOutcome = removeManagedResources(dependencies.agentDir, ownership.installedResources);
     removeRegularFile(configPath);
     removeRegularFile(ownershipPath);

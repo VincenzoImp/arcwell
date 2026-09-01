@@ -30,6 +30,8 @@ export interface ArcwellOwnership {
   workingAgreementExisted: boolean;
   workingAgreementEndedWithNewline: boolean;
   arcwellDirectoryExisted: boolean;
+  /** True when setup, not the user, put `inheritGlobalContext` into Pi's settings. */
+  subagentOverridesWritten: boolean;
 }
 
 const allowedProperties = [
@@ -43,6 +45,7 @@ const allowedProperties = [
   "workingAgreementExisted",
   "workingAgreementEndedWithNewline",
   "arcwellDirectoryExisted",
+  "subagentOverridesWritten",
 ] as const;
 const resourceProperties = ["path", "digest", "existedBefore"] as const;
 const relativeResourcePath = /^[a-z0-9][a-z0-9/._-]*$/;
@@ -108,6 +111,9 @@ export function parseOwnership(value: unknown): ArcwellOwnership {
   if (typeof value.arcwellDirectoryExisted !== "boolean") {
     throw new Error("arcwellDirectoryExisted: expected a boolean");
   }
+  if (typeof value.subagentOverridesWritten !== "boolean") {
+    throw new Error("subagentOverridesWritten: expected a boolean");
+  }
   return {
     schemaVersion: 1,
     arcwellVersion: value.arcwellVersion,
@@ -119,6 +125,7 @@ export function parseOwnership(value: unknown): ArcwellOwnership {
     workingAgreementExisted: value.workingAgreementExisted,
     workingAgreementEndedWithNewline: value.workingAgreementEndedWithNewline,
     arcwellDirectoryExisted: value.arcwellDirectoryExisted,
+    subagentOverridesWritten: value.subagentOverridesWritten,
   };
 }
 

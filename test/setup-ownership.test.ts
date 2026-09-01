@@ -17,7 +17,7 @@ mkdirSync(temporaryRoot, { recursive: true });
 const digest = "a".repeat(64);
 const ownership: ArcwellOwnership = {
   schemaVersion: 1,
-  arcwellVersion: "0.4.0",
+  arcwellVersion: "0.5.0",
   manifestDigest: digest,
   installedPackageSources: [ARCWELL_PACKAGE_SOURCE],
   installedResources: [],
@@ -26,6 +26,7 @@ const ownership: ArcwellOwnership = {
   workingAgreementExisted: true,
   workingAgreementEndedWithNewline: false,
   arcwellDirectoryExisted: false,
+  subagentOverridesWritten: false,
 };
 
 test("ownership JSON is strict, bounded, and contains only lifecycle ownership", () => {

@@ -5,9 +5,9 @@ agreement, fifteen skills, a planning subagent, prompt chains and a set of exten
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.4.0 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.5.0 setup --dry-run --write-manifest arcwell.json
 # read arcwell.json and the plan, then:
-npx github:VincenzoImp/arcwell#v0.4.0 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.5.0 setup --manifest arcwell.json --yes
 ```
 
 Three commands: `setup`, `doctor`, `uninstall`. Requires Node `>=24.15.0` and Pi `0.84.4`.
@@ -37,9 +37,9 @@ and survival across compaction.
 
 | | |
 |---|---|
-| **Working agreement** | Precedence, evidence, communication, code style, competence gate, discretion — merged as one marked block into your `AGENTS.md`, never overwriting it |
+| **Working agreement** | Precedence, evidence, communication, code style, competence gate, discretion — merged as one marked block into your `AGENTS.md`, never overwriting it, and inherited by the subagents Arcwell dispatches |
 | **Skills** | `scope-check` `code-review` `debug` `web` `grilling` `research` `planning` `tdd` `implementing` `delegating` `verification` `domain-modeling` `handoff` `prototype` `version-control` — only descriptions sit in context; bodies load on demand |
-| **Subagents** | `pi-subagents` brings twelve, with background and parallel dispatch. Arcwell adds `planner`, which reads the scout's `context.md` and writes the `plan.md` the worker reads — the handoff is files, not prose |
+| **Subagents** | `pi-subagents` brings twelve, with background and parallel dispatch. Arcwell adds `planner`, which reads the scout's `context.md` and writes the `plan.md` the worker reads — the handoff is files, not prose. The four it dispatches are set to inherit the working agreement, which none of them does by default |
 | **Prompts** | `/autonomous` `/quick` `/implement` `/implement-and-review` `/scout-and-plan` |
 | **Memory** | A worklog per session, re-injected after compaction — Pi summarises what was said and cannot touch what was never said. `/lesson` records what is worth not repeating |
 | **Protections** | An effects guard that fails closed without a UI, and secret-path blocking. Both on by default |
@@ -126,10 +126,12 @@ arcwell doctor --json     # what the current state is
 arcwell uninstall --yes
 ```
 
-Removes only exact package sources it recorded as installed, its marked agreement block, and
-managed files that still match byte-for-byte what it wrote. A file you have since edited is
-kept and reported: Arcwell does not delete work it did not write. Pi, credentials, sessions,
-trust state, pre-existing packages and unrelated bytes are untouched.
+Removes only exact package sources it recorded as installed, its marked agreement block,
+managed files that still match byte-for-byte what it wrote, and the one settings key it added
+(`subagents.agentOverrides.<agent>.inheritGlobalContext`) — and that only when setup, rather
+than you, wrote it. A file you have since edited is kept and reported: Arcwell does not delete
+work it did not write. Pi, credentials, sessions, trust state, pre-existing packages, every
+other settings key and unrelated bytes are untouched.
 
 ## Documentation
 

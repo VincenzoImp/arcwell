@@ -4,6 +4,7 @@ description: Turns gathered context into an implementation plan a fresh agent ca
 thinking: high
 systemPromptMode: replace
 inheritProjectContext: true
+inheritGlobalContext: true
 inheritSkills: false
 tools: read, grep, find, ls
 defaultReads: context.md

@@ -37,6 +37,7 @@ import { createSetupPlan } from "./plan.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import type { PiClient, PiPackage } from "./pi-client.js";
 import { COMPATIBLE_PI_VERSION, normalizedPiVersion } from "./pi-version.js";
+import { applySubagentOverrides, settingsPath } from "./subagent-overrides.js";
 import type { RuntimeConfig, SetupManifest } from "./types.js";
 import {
   mergeWorkingAgreement,
@@ -212,6 +213,11 @@ export async function applySetup(
         desired.some((desiredSource) => packageSourcesEquivalent(source, desiredSource))),
       ...newlyInstalled,
     ])];
+    // After the installs, because Pi rewrites settings.json for each one. Recorded so uninstall
+    // removes only what setup put there and leaves a flag the user set alone.
+    const settingsSnapshot = snapshotFile(settingsPath(agentDir));
+    const subagentOverridesWritten = manifest.modules.subagents && applySubagentOverrides(agentDir);
+    if (subagentOverridesWritten) changedFiles.push(settingsSnapshot);
     const ownership: ArcwellOwnership = {
       schemaVersion: 1,
       arcwellVersion: ARCWELL_VERSION,
@@ -223,6 +229,7 @@ export async function applySetup(
       workingAgreementExisted,
       workingAgreementEndedWithNewline,
       arcwellDirectoryExisted,
+      subagentOverridesWritten,
     };
     changedFiles.push(ownershipSnapshot);
     writeOwnershipAtomic(ownershipPath, ownership);
