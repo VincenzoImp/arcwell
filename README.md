@@ -1,9 +1,11 @@
 # Arcwell
 
 Arcwell is a reproducible, batteries-included environment for Pi. Version `0.1.0` is distributed
-from its pinned GitHub source; the npm package is not published. Its stable commands are `setup`,
-`doctor`, and `uninstall`. Legacy manifests and model-backed workflows remain under
-`arcwell experimental` and are not part of the stable setup contract.
+from its pinned GitHub source; the npm package is not published. Its commands are `setup`,
+`doctor`, and `uninstall`.
+
+It installs a working agreement, thirteen skills, four subagents, prompt chains and a set of
+extensions, then composes the rest from exact package sources through Pi.
 
 ## Requirements and release status
 
@@ -176,54 +178,6 @@ example `v0.1.0`) after that tag is pushed as the tag-release smoke. A main resu
 tag, and the clean-copy prepare smoke proves neither transport case. The real-package Pi smoke has
 passed on macOS; Linux and Windows remain open release gates.
 
-## Current Experimental commands
-
-```bash
-npm test
-node dist/src/cli.js experimental plan --manifest test/fixtures/full.json
-node dist/src/cli.js experimental plan --manifest test/fixtures/full.json --json
-node dist/src/cli.js experimental explain --manifest test/fixtures/full.json --json
-node dist/src/cli.js experimental schema
-node dist/src/cli.js experimental capabilities
-node dist/src/cli.js experimental workflows
-node dist/src/cli.js experimental workflow explain feature --json
-node dist/src/cli.js experimental workflow validate --file test/fixtures/workflow.json --json
-node dist/src/cli.js experimental workflow schema
-node dist/src/cli.js experimental run plan --goal "Propose the next project vertical" --cwd . --json
-node dist/src/cli.js experimental run feature --goal "Prepare an approved feature plan" --cwd . --persist --json
-# Resume with the emitted ledger.sessionId, checkpointEntryId, and checkpointDigest:
-node dist/src/cli.js experimental run feature resume --session <id> --checkpoint <entry> \
-  --checkpoint-digest <sha256> --approve-plan --cwd . --json
-# Run one root task with the emitted approval ID:
-node dist/src/cli.js experimental run feature worker --session <id> --checkpoint <entry> \
-  --checkpoint-digest <sha256> --approval <sha256> --task <task-id> --cwd . --json
-ARCWELL_REAL_MODEL_TEST=1 npm run test:model  # opt-in credential-consuming smoke test
-```
-
-The commands under `experimental` use separate legacy Experimental manifest and workflow
-schemas. Those schemas are not stable v1 setup input and are not a second canonical setup format.
-Experimental `plan` reports selected intelligence packs, workflows, posture, execution backend,
-approvals, and operations; Experimental `explain` adds ownership, provenance, lazy activation,
-and guardrails. Both are deterministic and do not modify the target environment.
-
-`run plan` creates two isolated in-memory Pi sessions. `run feature` uses the same safe agents,
-turns planner steps into an explicit dependency DAG, emits a graph-bound portable checkpoint,
-and stops at `approve-plan`. With `--persist`, the checkpoint and a relevant-file snapshot are
-stored as Pi custom session entries. Resume requires the emitted session, entry, digest, and
-explicit `--approve-plan`; it records a deterministic logical approval and stops at a read-only
-isolated-worker dispatch preview. `run feature worker` can then execute exactly one dependency-free
-task in an Arcwell-owned workspace. The Pi worker has read/list plus an atomic write tool restricted
-to declared task files—no shell or deletion—and records only a bounded changeset. It never modifies
-or integrates into the selected project. The scout and planner can only read
-and list inside the selected project; project extensions, skills, prompts, context files,
-and likely secret files are blocked. They communicate through validated structured artifacts.
-The command clones Pi credentials into an ephemeral in-memory store through Pi's read-only
-auth loader, keeps model catalogs and settings in memory, and never writes or prints credential
-values. Reads reject paths outside the project, common credential stores, unstable files, and
-content matching common secret signatures before it reaches the model. This is defense in depth,
-not a substitute for keeping secrets out of repositories. Progress goes to stderr and `--json`
-emits one result document on stdout.
-
 ## Explicitly excluded from stable v1
 
 Stable v1 does not provide coding-preference packages, nopeek, confirm-destructive, background
@@ -232,24 +186,6 @@ isolation, candidate integration, workspace rollback, Arcwell presets, Full/Cust
 Arcwell DAG/scheduler, custom session ledgers, databases, queues, release automation, or CI created
 without an authorized repository. Optional packages may expose their own behavior, but Arcwell
 does not add stronger integration semantics around it.
-
-## Experimental legacy direction
-
-The legacy Experimental design proposed:
-
-- a concise working agreement;
-- skill packs, agents, and prompt composition;
-- declarative workflow graphs;
-- subagent and optional persistent Herdr backends;
-- lazy Claude Code and MCP integrations;
-- host, guarded, and isolated execution postures;
-- transactional apply, rollback, uninstall, migration, and doctor commands.
-
-Experimental `workflow explain feature` statically validates its bounded project workflow and shows
-its deterministic execution waves: scout, planner, approval, up to six isolated workers,
-integration, review, verification, and final acceptance. `workflow validate` applies the same
-strict contract to a user JSON graph, while `workflow schema` supports editors and CI. Neither
-command executes write nodes.
 
 ## Guardrail limits
 
@@ -261,31 +197,20 @@ project processes retain host permissions. Enforcing a stronger boundary require
 Arcwell v1 intentionally excludes it.
 
 Power is exposed through progressive disclosure rather than removed for simplicity.
-[`docs/specification.md`](docs/specification.md) starts with the stable contract and retains a
-clearly marked legacy appendix; [`docs/implementation-plan.md`](docs/implementation-plan.md)
-describes the Experimental legacy path.
+[`docs/specification.md`](docs/specification.md) carries the full contract.
 
 ## Status
 
-Implemented locally:
+Implemented:
 
-- strict TypeScript build;
-- exact runtime and development dependency pins;
-- schema-versioned Experimental manifest validation;
-- deterministic portable Experimental Core/guarded and Full manifest generation;
-- deterministic portable Experimental planning;
-- Experimental JSON Schema and effective configuration explanation;
-- capability ownership, provenance, platform, approval, and activation metadata;
-- human and JSON CLI output;
-- bounded read-only project scout/planner with abort and failure isolation;
-- strict multi-agent graph contracts with deterministic concurrency waves and user gates;
-- curated feature workflow with bounded six-worker fan-out and isolated write workspaces;
-- real read-only feature preparation stopped at a graph-bound user approval checkpoint;
-- Pi-native checkpoint persistence, content/project binding, approval resume, and worker dispatch preview;
-- one isolated Pi worker for an approved root task, with bounded writes and no project integration;
-- no-write, path-boundary, secret-file, and structured-artifact regression tests.
+- strict TypeScript build with exact dependency pins;
+- schema-versioned setup manifest, deterministic portable generation, and a dry run that
+  reaches neither the network nor a model;
+- the setup wizard, bounded lifecycle ownership, doctor, and ownership-safe uninstall with
+  compensation on failure;
+- exact package filtering and Git-source distribution checks;
+- the working agreement, thirteen skills, four subagents, prompt chains, six tool postures,
+  tool discipline, and the effects and secret-path protections;
+- fake-client scratch coverage for setup, doctor, uninstall, and filesystem restoration.
 
-The stable implementation also includes the setup wizard, bounded lifecycle ownership, doctor,
-ownership-safe uninstall, compensation, exact package filtering, Git-source distribution checks,
-and fake-client scratch coverage. npm publication, generic Experimental DAG execution, Herdr
-execution, a Claude adapter, MCP server management, and release automation remain absent.
+npm publication, MCP server management, and release automation remain absent.
