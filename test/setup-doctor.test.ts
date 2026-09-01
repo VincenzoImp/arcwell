@@ -121,7 +121,7 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
 test("doctor warns only for disabled protections, not disabled optional modules", async () => {
   const root = mkdtempSync(join(temporaryRoot, "doctor-warning-"));
   try {
-    const enabledSources = allSources.filter((source) => !source.includes("pi-web-access"));
+    const enabledSources = allSources.filter((source) => !source.includes("pi-mcp"));
     writeHealthyState(root, enabledSources);
     writeRuntimeConfigAtomic(join(root, "arcwell", "config.json"), {
       ...guarded,
@@ -307,13 +307,13 @@ test("Arcwell extension health does not reuse cached syntax after same-size cont
 test("doctor reports an active unowned deselected catalog package as unhealthy", async () => {
   const root = mkdtempSync(join(temporaryRoot, "doctor-unowned-deselected-"));
   try {
-    const webSource = PACKAGE_CATALOG.find((entry) => entry.capability === "web")!.source;
-    const selected = allSources.filter((source) => source !== webSource);
+    const mcpSource = PACKAGE_CATALOG.find((entry) => entry.capability === "mcp")!.source;
+    const selected = allSources.filter((source) => source !== mcpSource);
     writeHealthyState(root, selected);
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages([...selected, webSource])) });
+    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages([...selected, mcpSource])) });
 
     assert.equal(report.exitStatus, 2);
-    assert.ok(report.checks.some((check) => check.id === "package.unowned.web" && check.status === "error"));
+    assert.ok(report.checks.some((check) => check.id === "package.unowned.mcp" && check.status === "error"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

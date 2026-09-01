@@ -1,15 +1,9 @@
 export const protectionNames = ["effects", "secrets", "redaction"] as const;
-export const moduleNames = [
-  "lsp",
-  "context",
-  "todo",
-  "questionnaire",
-  "planMode",
-  "mcp",
-  "web",
-  "subagents",
-  "autonomousWorkflows",
-] as const;
+
+// Only capabilities that a separate package owns. Todo, questionnaire, plan mode, subagents
+// and web ship inside Arcwell now, so they are not switches over an external package: use
+// `pi config` to disable one of Arcwell's own resources.
+export const moduleNames = ["lsp", "context", "mcp"] as const;
 
 export type ProtectionName = (typeof protectionNames)[number];
 export type ModuleName = (typeof moduleNames)[number];

@@ -21,10 +21,7 @@ test("dry-run plan is deterministic, portable, and contains exact selected packa
       "npm:@spences10/pi-context@0.1.16",
       "npm:@spences10/pi-lsp@0.0.46",
       "npm:@spences10/pi-mcp@0.0.60",
-      "npm:@narumitw/pi-plan-mode@0.56.0",
-      "npm:@juicesharp/rpiv-ask-user-question@2.8.0",
       "npm:@spences10/pi-redact@0.0.15",
-      "npm:@juicesharp/rpiv-todo@2.8.0",
     ],
   );
   assert.equal(first.operations.some((operation) => operation.destination === "$PI_CODING_AGENT_DIR/AGENTS.md"), true);

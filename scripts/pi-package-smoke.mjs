@@ -25,16 +25,13 @@ const PI_SETTINGS_EXCEPTION = {
   version: "0.0.3",
   repositoryFragment: "github.com/spences10/my-pi",
 };
+// Only packages that survive alongside Arcwell's own resources. This smoke is what caught
+// rpiv-todo and pi-subagents registering tools Arcwell already registers, which makes Pi
+// load neither: `Tool "todo" conflicts with ...`.
 const EXPECTED_EXTERNAL_EXTENSIONS = new Map([
   ["npm:@spences10/pi-lsp@0.0.46", "dist/index.js"],
   ["npm:@spences10/pi-context@0.1.16", "dist/index.js"],
-  ["npm:@juicesharp/rpiv-todo@2.8.0", "index.ts"],
-  ["npm:@juicesharp/rpiv-ask-user-question@2.8.0", "index.ts"],
-  ["npm:@narumitw/pi-plan-mode@0.56.0", "dist/index.ts"],
   ["npm:@spences10/pi-mcp@0.0.60", "dist/index.js"],
-  ["npm:pi-web-access@0.27.0", "index.ts"],
-  ["npm:pi-subagents@0.61.0", "index.ts"],
-  ["npm:@narumitw/pi-goal@0.54.4", "dist/index.ts"],
   ["npm:@spences10/pi-redact@0.0.15", "dist/index.js"],
 ]);
 
@@ -264,10 +261,10 @@ async function verifyResources(catalogSources, npmRoot) {
   for (const entry of skillResult.skills) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
   for (const entry of promptResult.prompts) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
 
-  assert(extensionResult.extensions.length === 11,
-    `Expected exactly 11 extensions, found ${extensionResult.extensions.length}`);
-  assert(skillResult.skills.length === 4, `Expected exactly 4 skills, found ${skillResult.skills.length}`);
-  assert(promptResult.prompts.length === 9, `Expected exactly 9 prompts, found ${promptResult.prompts.length}`);
+  assert(extensionResult.extensions.length === 12,
+    `Expected exactly 12 extensions, found ${extensionResult.extensions.length}`);
+  assert(skillResult.skills.length === 13, `Expected exactly 13 skills, found ${skillResult.skills.length}`);
+  assert(promptResult.prompts.length === 3, `Expected exactly 3 prompts, found ${promptResult.prompts.length}`);
 
   const extensionsForSource = (source) => extensionResult.extensions.filter((entry) => entry.sourceInfo.source === source);
   const skillsForSource = (source) => skillResult.skills.filter((entry) => entry.sourceInfo.source === source);
@@ -282,10 +279,20 @@ async function verifyResources(catalogSources, npmRoot) {
   const arcwellExtensions = extensionResult.extensions.filter(belongsToArcwell);
   const arcwellSkills = skillResult.skills.filter(belongsToArcwell);
   const arcwellPrompts = promptResult.prompts.filter(belongsToArcwell);
-  assert(arcwellExtensions.length === 1 && normalizeRelative(repositoryRoot, arcwellExtensions[0].resolvedPath) === "dist/extensions/arcwell-protections.js",
-    "Arcwell extension was not discovered from the installed local package");
-  assert(JSON.stringify(arcwellSkills.map((entry) => entry.name).sort()) === JSON.stringify(["code-review", "debug"]),
-    "Arcwell skills were not discovered exactly");
+  assert(JSON.stringify(arcwellExtensions.map((entry) => normalizeRelative(repositoryRoot, entry.resolvedPath)).sort()) === JSON.stringify([
+    "dist/extensions/arcwell-memory.js",
+    "dist/extensions/arcwell-protections.js",
+    "extensions/upstream/plan-mode/index.ts",
+    "extensions/upstream/preset.ts",
+    "extensions/upstream/questionnaire.ts",
+    "extensions/upstream/subagent/index.ts",
+    "extensions/upstream/todo.ts",
+    "extensions/upstream/tools.ts",
+  ]), "Arcwell extensions were not discovered exactly from the installed local package");
+  assert(JSON.stringify(arcwellSkills.map((entry) => entry.name).sort()) === JSON.stringify([
+    "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
+    "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+  ]), "Arcwell skills were not discovered exactly");
   assert(JSON.stringify(arcwellPrompts.map((entry) => entry.name).sort()) === JSON.stringify(["implement", "implement-and-review", "scout-and-plan"]),
     "Arcwell prompts were not discovered exactly");
 
@@ -296,11 +303,14 @@ async function verifyResources(catalogSources, npmRoot) {
     assert(extensions.some((entry) => entry.sourceInfo.baseDir && normalizeRelative(entry.sourceInfo.baseDir, entry.resolvedPath) === expectedPath),
       `${source} extension ${expectedPath} was not discovered`);
   }
-  const subagentsSource = "npm:pi-subagents@0.61.0";
-  assert(skillsForSource(subagentsSource).length === 2,
-    `Expected exactly 2 ${subagentsSource} skills, found ${skillsForSource(subagentsSource).length}`);
-  assert(promptsForSource(subagentsSource).length === 6,
-    `Expected exactly 6 ${subagentsSource} prompts, found ${promptsForSource(subagentsSource).length}`);
+  // The remaining catalog packages contribute extensions only. Arcwell owns every skill and
+  // prompt in the environment, which is what makes the counts above exact.
+  for (const source of catalogSources) {
+    assert(skillsForSource(source).length === 0,
+      `${source} contributed ${skillsForSource(source).length} skills; the catalog is extensions-only`);
+    assert(promptsForSource(source).length === 0,
+      `${source} contributed ${promptsForSource(source).length} prompts; the catalog is extensions-only`);
+  }
 
   console.log(`\nDiscovered ${extensionResult.extensions.length} extensions, ${skillResult.skills.length} skills, and ${promptResult.prompts.length} prompts.`);
 }

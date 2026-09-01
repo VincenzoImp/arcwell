@@ -19,17 +19,7 @@ const exactManifest = {
   posture: "guarded",
   protections: { effects: true, secrets: true, redaction: true },
   providerGuidance: { claudeSubscription: true },
-  modules: {
-    lsp: true,
-    context: true,
-    todo: true,
-    questionnaire: true,
-    planMode: true,
-    mcp: true,
-    web: false,
-    subagents: false,
-    autonomousWorkflows: false,
-  },
+  modules: { lsp: true, context: true, mcp: true },
 };
 
 test("default setup manifest is the approved portable manifest", () => {
@@ -67,7 +57,12 @@ test("every protection and supported module is independently toggleable", () => 
 });
 
 test("removed module keys and provider selection are rejected", () => {
-  for (const name of ["codingPreferences", "backgroundTasks", "webUi", "gitCheckpoint", "notifications"]) {
+  // The last six became Arcwell's own resources: a manifest that still switches them is
+  // describing a system that no longer exists, so it fails rather than being ignored.
+  for (const name of [
+    "codingPreferences", "backgroundTasks", "webUi", "gitCheckpoint", "notifications",
+    "todo", "questionnaire", "planMode", "web", "subagents", "autonomousWorkflows",
+  ]) {
     const manifest = structuredClone(exactManifest) as typeof exactManifest & { modules: Record<string, boolean> };
     manifest.modules[name] = false;
     assert.throws(() => parseSetupManifest(manifest), new RegExp(`modules\\.${name}: unknown property`));

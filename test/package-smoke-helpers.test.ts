@@ -168,6 +168,7 @@ test("Arcwell declares separate prepare and explicit networked Git-source smokes
     scripts?: Record<string, string>;
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
+    peerDependencies?: Record<string, string>;
   };
   assert.equal(manifest.scripts?.prepare, "npm run build");
   assert.equal(manifest.scripts?.["test:prepare"], "node scripts/prepare-smoke.mjs");
@@ -183,9 +184,22 @@ test("Arcwell declares separate prepare and explicit networked Git-source smokes
     nodeTypes: "26.4.0",
   });
   // Pruned with the experimental layer; asserted absent so they cannot drift back in.
-  for (const pruned of ["ajv", "typebox", "@earendil-works/pi-ai"]) {
-    assert.equal(manifest.dependencies?.[pruned], undefined, `${pruned} must stay pruned`);
+  assert.equal(manifest.dependencies?.ajv, undefined, "ajv must stay pruned");
+
+  // Pi bundles its core packages for extensions and skills, and docs/packages.md requires
+  // importers to declare them as peers rather than bundling a second copy. A bundled copy
+  // would give an extension different module instances from the Pi runtime loading it.
+  for (const core of [
+    "@earendil-works/pi-coding-agent",
+    "@earendil-works/pi-ai",
+    "@earendil-works/pi-agent-core",
+    "@earendil-works/pi-tui",
+    "typebox",
+  ]) {
+    assert.equal(manifest.dependencies?.[core], undefined, `${core} must not be a runtime dependency`);
+    assert.equal(manifest.devDependencies?.[core], undefined, `${core} must not be a dev dependency`);
   }
+  assert.equal(manifest.peerDependencies?.["@earendil-works/pi-coding-agent"], "*");
   assert.equal(manifest.devDependencies?.typescript, undefined);
   assert.equal(manifest.devDependencies?.["@types/node"], undefined);
   assert.equal(manifest.devDependencies?.["typescript-language-server"], "6.0.0");

@@ -3,7 +3,7 @@ import type { Readable, Writable } from "node:stream";
 
 import { createDefaultManifest } from "./manifest.js";
 import { createSetupPlan } from "./plan.js";
-import type { ModuleName, ProtectionName, SetupManifest } from "./types.js";
+import { moduleNames, type ModuleName, type ProtectionName, type SetupManifest } from "./types.js";
 
 export interface SetupWizardIo {
   question(prompt: string, signal?: AbortSignal): Promise<string | undefined>;
@@ -82,15 +82,11 @@ export function renderSetupPlan(manifest: SetupManifest, io: Pick<SetupWizardIo,
   }
 
   io.write("Effects: installs the listed exact packages, merges the marked agreement block, and writes Arcwell config.\n");
-  io.write("Network: applying package installs through Pi may access the npm registry");
-  io.write(manifest.modules.web ? "; the selected web module permits network access during use.\n" : "; no web module is selected.\n");
-  io.write("Warning: Web and MCP integrations may use network access and configured credentials when invoked.\n");
-  io.write("Warning: Subagents and autonomous workflows invoke additional paid model calls when selected and used.\n");
+  io.write("Network: applying package installs through Pi may access the npm registry.\n");
+  io.write("Warning: the web skill and configured MCP servers use network access and configured credentials when invoked.\n");
+  io.write("Warning: subagents invoke additional paid model calls when used.\n");
   io.write("Listeners: Arcwell setup opens no listener; selected MCP integrations may use configured transports only when invoked.\n");
-  const processImplications = ["applying invokes the Pi package process"];
-  if (manifest.modules.subagents) processImplications.push("subagents may start child agent processes during use");
-  if (manifest.modules.autonomousWorkflows) processImplications.push("autonomous workflows may run package-owned goal processes during use");
-  io.write(`Processes: ${processImplications.join("; ")}.\n`);
+  io.write("Processes: applying invokes the Pi package process; subagents start child agent processes during use.\n");
   for (const note of plan.notes) io.write(`Note: ${note}\n`);
   for (const warning of plan.warnings) io.write(`Warning: ${warning}\n`);
 }
@@ -142,30 +138,17 @@ export async function runSetupWizard(
     }
   }
 
-  const coreModules: readonly ModuleName[] = ["lsp", "context", "todo", "questionnaire", "planMode", "mcp"];
+  // One question, because there are only three packages left and each owns a capability
+  // Arcwell would otherwise have to implement. Everything else now ships inside Arcwell and
+  // is disabled through `pi config`, not here.
   const core = await askYesNo(
     io,
-    "Use recommended Core modules (LSP, context, todo, questionnaire, plan mode, MCP)? [Y/n] ",
+    "Install the external capability packages (LSP, context sidecar, MCP)? [Y/n] ",
     true,
     signal,
   );
   if (core === "cancel") return undefined;
-  setModules(manifest, coreModules, core);
-
-  const advanced = await askYesNo(io, "Open Advanced module choices? [y/N] ", false, signal);
-  if (advanced === "cancel") return undefined;
-  if (advanced) {
-    const advancedQuestions: ReadonlyArray<[ModuleName, string]> = [
-      ["web", "Enable web access? [y/N] "],
-      ["subagents", "Enable subagents? [y/N] "],
-      ["autonomousWorkflows", "Enable autonomous workflows? [y/N] "],
-    ];
-    for (const [name, prompt] of advancedQuestions) {
-      const enabled = await askYesNo(io, prompt, false, signal);
-      if (enabled === "cancel") return undefined;
-      manifest.modules[name] = enabled;
-    }
-  }
+  setModules(manifest, moduleNames, core);
 
   return shouldConfirm ? confirmManifest(io, manifest, signal) : manifest;
 }

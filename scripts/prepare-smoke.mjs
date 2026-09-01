@@ -123,14 +123,18 @@ try {
       ])}`);
     }
     const fromCheckout = (entry) => entry.sourceInfo?.baseDir === checkout;
-    if (extensions.extensions.filter(fromCheckout).length !== 1) {
-      throw new Error("Prepare smoke did not load exactly one Arcwell extension");
-    }
-    if (skills.skills.filter(fromCheckout).length !== 2) {
-      throw new Error("Prepare smoke did not load exactly two Arcwell skills");
-    }
-    if (prompts.prompts.filter(fromCheckout).length !== 3) {
-      throw new Error("Prepare smoke did not load exactly three Arcwell prompts");
+    // Two compiled extensions of our own plus the six upstream entry points; the upstream
+    // ones ship as TypeScript, so this also proves Pi loads them from a clean --omit=dev
+    // install without a build step of their own.
+    const expected = [
+      ["extension", extensions.extensions.filter(fromCheckout).length, 8],
+      ["skill", skills.skills.filter(fromCheckout).length, 13],
+      ["prompt", prompts.prompts.filter(fromCheckout).length, 3],
+    ];
+    for (const [kind, actual, wanted] of expected) {
+      if (actual !== wanted) {
+        throw new Error(`Prepare smoke loaded ${actual} ${kind}(s) from the checkout, expected ${wanted}`);
+      }
     }
   } finally {
     restoreEnvironment();

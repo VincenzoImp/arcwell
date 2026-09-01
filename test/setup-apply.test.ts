@@ -14,7 +14,12 @@ const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 const agreement = "<!-- arcwell:start -->\nArcwell rules\n<!-- arcwell:end -->\n";
 const arcwellSource = ARCWELL_PACKAGE_SOURCE;
-const webSource = "npm:pi-web-access@0.27.0";
+const mcpSource = "npm:@spences10/pi-mcp@0.0.60";
+const withoutMcp = (): ReturnType<typeof createDefaultManifest> => {
+  const manifest = createDefaultManifest();
+  manifest.modules.mcp = false;
+  return manifest;
+};
 
 function desiredSources(manifest = createDefaultManifest()): string[] {
   return createSetupPlan(manifest).operations.flatMap((operation) =>
@@ -100,12 +105,12 @@ test("apply accepts a same-ref semantic Arcwell Git source without installing or
 test("apply refuses an active unowned catalog package that the manifest deselects before mutation", async () => {
   const root = mkdtempSync(join(temporaryRoot, "apply-unowned-deselected-"));
   try {
-    const client = new FakePiClient([webSource]);
-    await assert.rejects(applySetup(createDefaultManifest(), {
+    const client = new FakePiClient([mcpSource]);
+    await assert.rejects(applySetup(withoutMcp(), {
       agentDir: root,
       piClient: client,
       workingAgreement: agreement,
-    }), /unowned.*pi-web-access.*deselected/i);
+    }), /unowned.*pi-mcp.*deselected/i);
     assert.deepEqual(client.installs, []);
     assert.deepEqual(client.removals, []);
     assert.equal(existsSync(join(root, "AGENTS.md")), false);
@@ -228,20 +233,19 @@ test("reconfiguration removes packages Arcwell owned but no longer selects", asy
   const root = mkdtempSync(join(temporaryRoot, "apply-deselect-"));
   try {
     const enabled = createDefaultManifest();
-    enabled.modules.web = true;
     const client = new FakePiClient();
     await applySetup(enabled, { agentDir: root, piClient: client, workingAgreement: agreement });
     client.installs.length = 0;
     client.removals.length = 0;
 
-    const ownership = await applySetup(createDefaultManifest(), {
+    const ownership = await applySetup(withoutMcp(), {
       agentDir: root,
       piClient: client,
       workingAgreement: agreement,
     });
-    assert.deepEqual(client.removals, [webSource]);
-    assert.equal(client.installed.some((item) => item.source === webSource && item.scope === "user"), false);
-    assert.equal(ownership.installedPackageSources.includes(webSource), false);
+    assert.deepEqual(client.removals, [mcpSource]);
+    assert.equal(client.installed.some((item) => item.source === mcpSource && item.scope === "user"), false);
+    assert.equal(ownership.installedPackageSources.includes(mcpSource), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -251,7 +255,6 @@ test("reconfiguration restores a removed prior package when a later health check
   const root = mkdtempSync(join(temporaryRoot, "apply-restore-deselected-"));
   try {
     const enabled = createDefaultManifest();
-    enabled.modules.web = true;
     const client = new FakePiClient();
     await applySetup(enabled, { agentDir: root, piClient: client, workingAgreement: agreement });
     client.installs.length = 0;
@@ -263,14 +266,14 @@ test("reconfiguration restores a removed prior package when a later health check
       return lists === 2 ? installed.filter((item) => item.source !== arcwellSource) : installed;
     };
 
-    await assert.rejects(applySetup(createDefaultManifest(), {
+    await assert.rejects(applySetup(withoutMcp(), {
       agentDir: root,
       piClient: client,
       workingAgreement: agreement,
     }), /setup health check: missing package/);
-    assert.deepEqual(client.removals, [webSource]);
-    assert.deepEqual(client.installs, [webSource]);
-    assert.ok(client.installed.some((item) => item.source === webSource && item.scope === "user"));
+    assert.deepEqual(client.removals, [mcpSource]);
+    assert.deepEqual(client.installs, [mcpSource]);
+    assert.ok(client.installed.some((item) => item.source === mcpSource && item.scope === "user"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -280,20 +283,19 @@ test("reconfiguration does not remove deselected packages before config succeeds
   const root = mkdtempSync(join(temporaryRoot, "apply-config-before-remove-"));
   try {
     const enabled = createDefaultManifest();
-    enabled.modules.web = true;
     const client = new FakePiClient();
     await applySetup(enabled, { agentDir: root, piClient: client, workingAgreement: agreement });
     client.installs.length = 0;
     client.removals.length = 0;
 
-    await assert.rejects(applySetup(createDefaultManifest(), {
+    await assert.rejects(applySetup(withoutMcp(), {
       agentDir: root,
       piClient: client,
       workingAgreement: agreement,
       writeRuntimeConfig: () => { throw new Error("injected config failure"); },
     }), /injected config failure/);
     assert.deepEqual(client.removals, []);
-    assert.ok(client.installed.some((item) => item.source === webSource && item.scope === "user"));
+    assert.ok(client.installed.some((item) => item.source === mcpSource && item.scope === "user"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

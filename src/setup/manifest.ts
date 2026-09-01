@@ -34,17 +34,7 @@ export function createDefaultManifest(): SetupManifest {
     posture: "guarded",
     protections: { effects: true, secrets: true, redaction: true },
     providerGuidance: { claudeSubscription: true },
-    modules: {
-      lsp: true,
-      context: true,
-      todo: true,
-      questionnaire: true,
-      planMode: true,
-      mcp: true,
-      web: false,
-      subagents: false,
-      autonomousWorkflows: false,
-    },
+    modules: { lsp: true, context: true, mcp: true },
   };
 }
 

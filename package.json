@@ -72,11 +72,13 @@
     "check": "npm test"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "0.84.4",
     "@types/node": "26.4.0",
     "typescript": "6.0.3"
   },
   "devDependencies": {
     "typescript-language-server": "6.0.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
   }
 }

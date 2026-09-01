@@ -1,18 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PACKAGE_CATALOG, REJECTED_CAPABILITIES, validateCatalog } from "../src/setup/catalog.js";
+import {
+  INTERNAL_CAPABILITIES,
+  PACKAGE_CATALOG,
+  REJECTED_CAPABILITIES,
+  validateCatalog,
+} from "../src/setup/catalog.js";
 
 const expectedCatalog = [
   ["lsp", "npm:@spences10/pi-lsp@0.0.46", true],
   ["context", "npm:@spences10/pi-context@0.1.16", true],
-  ["todo", "npm:@juicesharp/rpiv-todo@2.8.0", true],
-  ["questionnaire", "npm:@juicesharp/rpiv-ask-user-question@2.8.0", true],
-  ["planMode", "npm:@narumitw/pi-plan-mode@0.56.0", true],
   ["mcp", "npm:@spences10/pi-mcp@0.0.60", true],
-  ["web", "npm:pi-web-access@0.27.0", false],
-  ["subagents", "npm:pi-subagents@0.61.0", false],
-  ["autonomousWorkflows", "npm:@narumitw/pi-goal@0.54.4", false],
   ["redaction", "npm:@spences10/pi-redact@0.0.15", true],
 ] as const;
 
@@ -47,6 +46,7 @@ test("overlapping and rejected policy or workflow packages stay out of the catal
     "confirm-destructive",
     "background-tasks",
     "dynamic-workflows",
+    "autonomous-workflows",
     "web-ui",
     "git-checkpoint",
     "notifications",
@@ -59,5 +59,20 @@ test("overlapping and rejected policy or workflow packages stay out of the catal
     "pi-background-tasks",
     "pi-dynamic-workflows",
     "pi-web-ui",
+    "pi-goal",
   ]) assert.equal(serialized.includes(rejected), false);
+});
+
+test("a package Arcwell supersedes never reappears in the catalog", () => {
+  // Installing one of these alongside Arcwell's own copy registers the same tool twice and
+  // Pi then loads neither: `Tool "todo" conflicts with ...`. The real-package smoke caught
+  // exactly this, so the catalog is asserted against the superseded list.
+  const serialized = JSON.stringify(PACKAGE_CATALOG);
+  for (const { capability, supersedes } of INTERNAL_CAPABILITIES) {
+    assert.equal(serialized.includes(supersedes), false, `${supersedes} conflicts with Arcwell's own ${capability}`);
+  }
+  assert.deepEqual(
+    INTERNAL_CAPABILITIES.map((entry) => entry.capability),
+    ["todo", "questionnaire", "plan-mode", "subagents", "web"],
+  );
 });

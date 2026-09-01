@@ -150,7 +150,7 @@ test("non-TTY setup mutation requires both --manifest and --yes before injected 
 
 test("interactive setup applies the generated defaults only after explicit confirmation", async () => {
   let applied: ReturnType<typeof createDefaultManifest> | undefined;
-  const answers = ["", "", "", "", "", "", "yes"];
+  const answers = ["", "", "", "", "", "yes"];
   assert.equal(await handleSetupCommand(["setup"], {
     stdout: () => undefined,
     stderr: () => undefined,
@@ -168,7 +168,7 @@ test("interactive setup applies the generated defaults only after explicit confi
 test("interactive setup never applies before the rendered plan is explicitly confirmed", async () => {
   let applied = false;
   const output: string[] = [];
-  const answers = ["", "", "", "", "", "", "no"];
+  const answers = ["", "", "", "", "", "no"];
   assert.equal(await handleSetupCommand(["setup"], {
     stdout: (text) => output.push(text),
     stderr: () => undefined,
