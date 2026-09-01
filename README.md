@@ -5,9 +5,9 @@ agreement, fifteen skills, a planning subagent, prompt chains and a set of exten
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.3.3 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.4.0 setup --dry-run --write-manifest arcwell.json
 # read arcwell.json and the plan, then:
-npx github:VincenzoImp/arcwell#v0.3.3 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.4.0 setup --manifest arcwell.json --yes
 ```
 
 Three commands: `setup`, `doctor`, `uninstall`. Requires Node `>=24.15.0` and Pi `0.84.4`.
@@ -59,6 +59,7 @@ The only profile is `core`; the default posture is `guarded`.
 | `modules.mcp` | on | `@spences10/pi-mcp` — lazy MCP; Arcwell configures no servers |
 | `modules.subagents` | on | `pi-subagents` — delegation, background and parallel runs |
 | `modules.goal` | on | `@narumitw/pi-goal` — session goals with budgets and evidence |
+| `modules.claudeCli` | **off** | `pi-claude-cli` — routes Anthropic through the Claude CLI. Only for a subscription login; `doctor` warns when your provider is `anthropic` and this is off |
 
 **One module, one external package.** A package earns its place by saving work Arcwell would
 otherwise have to do — a whole LSP protocol, an MCP client's server lifecycle, a credential
@@ -99,6 +100,12 @@ Pi's native `/login` owns it; Arcwell never reads or reports authentication stat
 method deliberately: a Claude subscription login and an Anthropic API key are different billing
 paths, and third-party harness usage may draw on extra usage rather than on a plan. Verify in
 your provider settings before relying on it.
+
+`modules.claudeCli` installs the adapter that routes Anthropic through the Claude CLI, which is
+what puts a subscription login on the plan rather than on per-token billing. It is off by
+default because it is right for one provider and pointless for the others, and Arcwell does not
+know which you use. `doctor` reads the configured provider — configuration, not credentials —
+and warns when the two disagree.
 
 Setup, doctor, uninstall and dry run never call a model.
 

@@ -1,6 +1,6 @@
 {
   "name": "arcwell",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "A reproducible, batteries-included environment for Pi.",
   "license": "MIT",
   "author": "VincenzoImp",
@@ -90,7 +90,8 @@
     "test:git-source": "node scripts/git-source-smoke.mjs",
     "test:lifecycle": "npm run build && node scripts/lifecycle-smoke.mjs",
     "check": "npm test && npm run check:upstream",
-    "check:upstream": "node scripts/check-upstream.mjs"
+    "check:upstream": "node scripts/check-upstream.mjs",
+    "check:updates": "npm run build && node scripts/check-updates.mjs"
   },
   "dependencies": {
     "@types/node": "26.4.0",

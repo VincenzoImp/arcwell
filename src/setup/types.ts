@@ -9,7 +9,7 @@ export const protectionNames = ["effects", "secrets", "redaction"] as const;
  * skill, prompt and extension individually, globally or per project. Mirroring that here would
  * double the matrix to test and give two answers to the same question.
  */
-export const moduleNames = ["lsp", "context", "mcp", "subagents", "goal"] as const;
+export const moduleNames = ["lsp", "context", "mcp", "subagents", "goal", "claudeCli"] as const;
 
 export type ProtectionName = (typeof protectionNames)[number];
 export type ModuleName = (typeof moduleNames)[number];

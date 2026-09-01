@@ -14,18 +14,18 @@ import { moduleNames, protectionNames } from "../src/setup/types.js";
 
 const exactManifest = {
   schemaVersion: 1,
-  arcwellVersion: "0.3.3",
+  arcwellVersion: "0.4.0",
   profile: "core",
   posture: "guarded",
   protections: { effects: true, secrets: true, redaction: true },
   providerGuidance: { claudeSubscription: true },
-  modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true },
+  modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true, claudeCli: false },
 };
 
 test("default setup manifest is the approved portable manifest", () => {
   const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as { version?: unknown };
   assert.equal(ARCWELL_VERSION, packageJson.version);
-  assert.equal(ARCWELL_VERSION, "0.3.3");
+  assert.equal(ARCWELL_VERSION, "0.4.0");
   assert.deepEqual(createDefaultManifest(), exactManifest);
   assert.deepEqual(parseSetupManifest(exactManifest), exactManifest);
   assert.equal(JSON.stringify(exactManifest).includes(process.env.HOME ?? "__no_home__"), false);
@@ -33,7 +33,7 @@ test("default setup manifest is the approved portable manifest", () => {
 
 test("strict parsing rejects unknown fields, wrong versions, and contradictory host posture", () => {
   assert.throws(() => parseSetupManifest({ ...exactManifest, target: "/Users/example/.pi" }), /target: unknown property/);
-  assert.throws(() => parseSetupManifest({ ...exactManifest, arcwellVersion: "0.3.2" }), /arcwellVersion.*0\.3\.3/);
+  assert.throws(() => parseSetupManifest({ ...exactManifest, arcwellVersion: "0.3.3" }), /arcwellVersion.*0\.4\.0/);
   assert.throws(() => parseSetupManifest({ ...exactManifest, schemaVersion: 2 }), /schemaVersion.*1/);
   assert.throws(() => parseSetupManifest({ ...exactManifest, profile: "full" }), /profile.*core/);
   assert.throws(() => parseSetupManifest({ ...exactManifest, posture: "host" }), /host.*protections.*false/);

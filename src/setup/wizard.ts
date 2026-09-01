@@ -138,17 +138,29 @@ export async function runSetupWizard(
     }
   }
 
-  // One question, because there are only three packages left and each owns a capability
-  // Arcwell would otherwise have to implement. Everything else now ships inside Arcwell and
-  // is disabled through `pi config`, not here.
+  // One question, because each of these owns a capability Arcwell would otherwise have to
+  // implement, and wanting one of them and not the others is not a real position. Everything
+  // else now ships inside Arcwell and is disabled through `pi config`, not here.
   const core = await askYesNo(
     io,
-    "Install the external capability packages (LSP, context sidecar, MCP)? [Y/n] ",
+    "Install the external capability packages (LSP, context sidecar, MCP, subagents, goals)? [Y/n] ",
     true,
     signal,
   );
   if (core === "cancel") return undefined;
-  setModules(manifest, moduleNames, core);
+  setModules(manifest, moduleNames.filter((name) => name !== "claudeCli"), core);
+
+  // Asked apart, and defaulting to no, because it is the one entry whose value depends on
+  // something Arcwell does not know: an Anthropic subscription is billed per token without it,
+  // and it does nothing at all for an API key or another provider.
+  const claudeCli = await askYesNo(
+    io,
+    "Route Anthropic through the Claude CLI? Only for a Claude subscription login. [y/N] ",
+    false,
+    signal,
+  );
+  if (claudeCli === "cancel") return undefined;
+  manifest.modules.claudeCli = claudeCli;
 
   return shouldConfirm ? confirmManifest(io, manifest, signal) : manifest;
 }

@@ -16,6 +16,7 @@ npm run test:packages             # real Pi, real catalog packages, isolated scr
 npm run test:git-source -- <ref>  # a pushed ref through Pi's Git transport
 npm run test:lifecycle -- <ref>   # setup, doctor, uninstall against a real Pi
 npm run check                     # the first two, for the edit-run loop
+npm run check:updates             # every pin against what the registry publishes
 ```
 
 What each has caught that nothing else would have:

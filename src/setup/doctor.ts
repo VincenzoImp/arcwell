@@ -62,6 +62,17 @@ function readRegularText(path: string): string {
   return readFileSync(path, "utf8");
 }
 
+/** The provider selected in Pi's settings, or undefined when unreadable. Never auth state. */
+function configuredProvider(agentDir: string): string | undefined {
+  try {
+    const settings: unknown = JSON.parse(readFileSync(join(agentDir, "settings.json"), "utf8"));
+    const provider = (settings as { defaultProvider?: unknown }).defaultProvider;
+    return typeof provider === "string" ? provider : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function sourceCheckId(source: string): string {
   if (source === ARCWELL_PACKAGE_SOURCE) return "package.arcwell";
   const entry = PACKAGE_CATALOG.find((candidate) => candidate.source === source);
@@ -226,13 +237,23 @@ export async function runDoctor(
     }
 
     for (const moduleName of moduleNames) {
-      // Not every module owns an external package: `memory` is Arcwell's own extension, gated
-      // by the manifest but installed with the package rather than from the catalog.
       const entry = PACKAGE_CATALOG.find((candidate) => candidate.capability === moduleName);
       if (!entry || !ownership?.selectedPackageSources.includes(entry.source)) continue;
       checks.push(effectivePackage(entry.source)
         ? { id: `module.${moduleName}`, status: "ok", message: `Module ${moduleName} is effectively enabled` }
         : { id: `module.${moduleName}`, status: "error", message: `Selected module ${moduleName} is missing or filtered` });
+    }
+
+    // Configuration, not authentication state: which provider is selected, never whether or how
+    // it is logged in. A subscription login without the CLI adapter is billed per token, and
+    // nothing else in the system would ever mention it.
+    const claudeCli = PACKAGE_CATALOG.find((entry) => entry.capability === "claudeCli")!;
+    if (configuredProvider(dependencies.agentDir) === "anthropic" && !effectivePackage(claudeCli.source)) {
+      checks.push({
+        id: "provider.claudeCli",
+        status: "warning",
+        message: "Provider is anthropic and modules.claudeCli is off; a subscription login is billed per token on this path",
+      });
     }
 
     if (config) {

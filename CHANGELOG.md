@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.4.0
+
+Breaking: `modules` gains `claudeCli`, and three agent files are gone. Regenerate with
+`arcwell setup --dry-run --write-manifest arcwell.json`.
+
+This release removes more than it adds. The test it applies: keep only what carries a
+preference or a composition, and leave plumbing to whoever maintains it.
+
+### Removed
+
+- **`agents/scout.md`, `agents/worker.md`, `agents/reviewer.md`.** A package agent *shadows* a
+  builtin — it does not inherit the fields its frontmatter leaves unset. Resolving the
+  discovered config showed ours coming back `inheritProjectContext=false`, `thinking` unset,
+  `output` and `defaultReads` empty, while surviving builtins had all of them. So the four ran
+  **without the working agreement**, and the scout→worker handoff — declared in frontmatter as
+  `output: context.md` and `defaultReads`, never in prompt prose — was broken for the six
+  prompts `pi-subagents` ships. The builtins are also larger where it matters: reviewer 740
+  words against our 246.
+
+  The reviewer's `bash` was redundant: both dispatching prompts already hand it the diff, and
+  the builtin reads rather than runs git. The prompts now say so outright.
+
+### Changed
+
+- **`planner` joins the chain.** It is the one agent with no builtin counterpart, and it now
+  declares `inheritProjectContext`, `thinking`, `defaultReads: context.md` and `output:
+  plan.md` — which is what `worker` already reads.
+- **The peer dependency is pinned exactly.** npm installs peers automatically, so `"*"` did not
+  prevent a second copy: a Git install measures 170 MB against a 335 KB payload, 141 MB of it
+  Pi inside the package. It is not inert — `agent-dir.ts`, `preset.ts` and `tools.ts` import
+  values, and Node resolves those from the nested copy. `doctor` gains `pi.nested` for an
+  environment where they diverged anyway.
+- **`setup` gates on the Pi version.** It called `piClient.version()` and discarded the result,
+  so it installed against any Pi while `doctor` rejected anything but 0.84.4.
+
+### Added
+
+- **`modules.claudeCli`**, off by default — `pi-claude-cli`, which routes Anthropic through the
+  Claude CLI. Right for a subscription login, pointless for an API key or another provider, and
+  Arcwell does not know which you use. `doctor` reads the configured provider — configuration,
+  not credentials — and warns when it is `anthropic` and the module is off, because that path
+  is billed per token and nothing else would mention it.
+- **`npm run check:updates`** and a weekly CI job: every pin against what the registry
+  publishes. Exact pins compose the same environment twice and age without saying so.
+
+### Unchanged, and now on purpose
+
+- **The compaction prompt stays Pi's.** `agent-session.js` passes `customInstructions` to the
+  `session_before_compact` hook and then calls the default summariser with its own local
+  variable, so an extension can only replace the whole summary at the cost of a model call.
+  A house trigger would cover only compactions Arcwell starts; covering Pi's automatic
+  threshold means pre-empting it. The worklog already carries the durable state outside the
+  summary, which is the stronger mechanism.
+- **`extensions/upstream/` stays vendored.** Byte-identical copies of Pi's examples, proved by
+  `check:upstream` on every run. Unmodified upstream code is not custom; it is vendored because
+  Pi does not load its own examples.
+
 ## 0.3.3
 
 `0.3.2` shipped a README claiming the commands work on Windows, written before the lifecycle

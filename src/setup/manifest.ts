@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { moduleNames, protectionNames, type ModuleName, type ProtectionName, type SetupManifest } from "./types.js";
 
-export const ARCWELL_VERSION = "0.3.3";
+export const ARCWELL_VERSION = "0.4.0";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -34,7 +34,7 @@ export function createDefaultManifest(): SetupManifest {
     posture: "guarded",
     protections: { effects: true, secrets: true, redaction: true },
     providerGuidance: { claudeSubscription: true },
-    modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true },
+    modules: { lsp: true, context: true, mcp: true, subagents: true, goal: true, claudeCli: false },
   };
 }
 

@@ -23,6 +23,10 @@ export const PACKAGE_CATALOG: readonly CatalogEntry[] = [
   { id: "pi-subagents", capability: "subagents", source: "npm:pi-subagents@0.62.0", defaultEnabled: true, optional: false, conflictsWith: [] },
   { id: "pi-goal", capability: "goal", source: "npm:@narumitw/pi-goal@0.54.4", defaultEnabled: true, optional: false, conflictsWith: [] },
   { id: "pi-redact", capability: "redaction", source: "npm:@spences10/pi-redact@0.0.15", defaultEnabled: true, optional: false, conflictsWith: [] },
+  // Off by default, and the only entry that is: it routes Anthropic through the Claude CLI, so
+  // it is right for a subscription login and pointless for an API key or another provider.
+  // Arcwell does not know which you use; `doctor` reads the configured provider and says so.
+  { id: "pi-claude-cli", capability: "claudeCli", source: "npm:pi-claude-cli@0.3.1", defaultEnabled: false, optional: true, conflictsWith: [] },
 ];
 
 /**

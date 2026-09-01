@@ -116,7 +116,7 @@ test("setup --manifest --yes invokes injected apply without resolving real Pi st
       isTTY: false,
       apply: async (manifest) => { calls.push(manifest.arcwellVersion); },
     }), true);
-    assert.deepEqual(calls, ["0.3.3"]);
+    assert.deepEqual(calls, ["0.4.0"]);
     assert.match(output.join(""), /setup complete/);
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -150,7 +150,7 @@ test("non-TTY setup mutation requires both --manifest and --yes before injected 
 
 test("interactive setup applies the generated defaults only after explicit confirmation", async () => {
   let applied: ReturnType<typeof createDefaultManifest> | undefined;
-  const answers = ["", "", "", "", "", "yes"];
+  const answers = ["", "", "", "", "", "", "yes"];
   assert.equal(await handleSetupCommand(["setup"], {
     stdout: () => undefined,
     stderr: () => undefined,

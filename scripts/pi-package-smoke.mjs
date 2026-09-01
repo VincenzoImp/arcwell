@@ -36,6 +36,9 @@ const EXPECTED_EXTERNAL_EXTENSIONS = new Map([
   ["npm:pi-subagents@0.62.0", "index.ts"],
   ["npm:@narumitw/pi-goal@0.54.4", "dist/index.ts"],
   ["npm:@spences10/pi-redact@0.0.15", "dist/index.js"],
+  // Off by default in the manifest, but installed here: what this smoke proves is that no two
+  // catalog packages register the same tool, and a default cannot exempt an entry from that.
+  ["npm:pi-claude-cli@0.3.1", "index.ts"],
 ]);
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -264,8 +267,8 @@ async function verifyResources(catalogSources, npmRoot) {
   for (const entry of skillResult.skills) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
   for (const entry of promptResult.prompts) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
 
-  assert(extensionResult.extensions.length === 13,
-    `Expected exactly 13 extensions, found ${extensionResult.extensions.length}`);
+  assert(extensionResult.extensions.length === 14,
+    `Expected exactly 14 extensions, found ${extensionResult.extensions.length}`);
   assert(skillResult.skills.length === 17, `Expected exactly 17 skills, found ${skillResult.skills.length}`);
   assert(promptResult.prompts.length === 11, `Expected exactly 11 prompts, found ${promptResult.prompts.length}`);
 

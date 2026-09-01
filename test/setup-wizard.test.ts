@@ -26,7 +26,7 @@ function scriptedWizard(answers: Array<string | undefined>): {
 }
 
 test("wizard defaults to guarded protections and installs the external packages", async () => {
-  const script = scriptedWizard(["", "", "", "", "", "yes"]);
+  const script = scriptedWizard(["", "", "", "", "", "", "yes"]);
   const manifest = await runSetupWizard(script.io);
 
   assert.deepEqual(manifest, createDefaultManifest());
@@ -43,7 +43,7 @@ test("wizard defaults to guarded protections and installs the external packages"
 });
 
 test("host posture disables every protection without asking contradictory protection questions", async () => {
-  const script = scriptedWizard(["host", "", "yes"]);
+  const script = scriptedWizard(["host", "", "", "yes"]);
   const manifest = await runSetupWizard(script.io);
 
   assert.deepEqual(manifest?.protections, { effects: false, secrets: false, redaction: false });
@@ -55,7 +55,7 @@ test("host posture disables every protection without asking contradictory protec
 });
 
 test("guarded posture allows each protection to be disabled independently", async () => {
-  const script = scriptedWizard(["guarded", "no", "no", "no", "", "yes"]);
+  const script = scriptedWizard(["guarded", "no", "no", "no", "", "", "yes"]);
   const manifest = await runSetupWizard(script.io);
 
   assert.deepEqual(manifest?.protections, { effects: false, secrets: false, redaction: false });
@@ -64,13 +64,13 @@ test("guarded posture allows each protection to be disabled independently", asyn
 });
 
 test("the external packages are one question, and declining installs none of them", async () => {
-  const accepted = scriptedWizard(["", "", "", "", "", "yes"]);
+  const accepted = scriptedWizard(["", "", "", "", "", "", "yes"]);
   const acceptedManifest = await runSetupWizard(accepted.io);
-  assert.deepEqual(acceptedManifest?.modules, { lsp: true, context: true, mcp: true, subagents: true, goal: true });
+  assert.deepEqual(acceptedManifest?.modules, { lsp: true, context: true, mcp: true, subagents: true, goal: true, claudeCli: false });
 
-  const declined = scriptedWizard(["", "", "", "", "no", "yes"]);
+  const declined = scriptedWizard(["", "", "", "", "no", "", "yes"]);
   const declinedManifest = await runSetupWizard(declined.io);
-  assert.deepEqual(declinedManifest?.modules, { lsp: false, context: false, mcp: false, subagents: false, goal: false });
+  assert.deepEqual(declinedManifest?.modules, { lsp: false, context: false, mcp: false, subagents: false, goal: false, claudeCli: false });
 
   // Capabilities Arcwell ships itself are not wizard questions: they arrive with the package
   // and are disabled through `pi config`.
@@ -106,7 +106,7 @@ test("EOF, cancellation, and an aborted signal return no manifest", async (t) =>
     assert.equal(await runSetupWizard(scriptedWizard(["cancel"]).io), undefined);
   });
   await t.test("declined final confirmation", async () => {
-    assert.equal(await runSetupWizard(scriptedWizard(["", "", "", "", "", "no"]).io), undefined);
+    assert.equal(await runSetupWizard(scriptedWizard(["", "", "", "", "", "", "no"]).io), undefined);
   });
   await t.test("SIGINT signal", async () => {
     const controller = new AbortController();

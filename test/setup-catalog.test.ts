@@ -15,7 +15,13 @@ const expectedCatalog = [
   ["subagents", "npm:pi-subagents@0.62.0", true],
   ["goal", "npm:@narumitw/pi-goal@0.54.4", true],
   ["redaction", "npm:@spences10/pi-redact@0.0.15", true],
+  ["claudeCli", "npm:pi-claude-cli@0.3.1", false],
 ] as const;
+
+test("the Claude CLI adapter is the only entry that is off by default", () => {
+  const off = PACKAGE_CATALOG.filter((entry) => !entry.defaultEnabled).map((entry) => entry.capability);
+  assert.deepEqual(off, ["claudeCli"]);
+});
 
 test("catalog assigns one exact owner to every accepted capability", () => {
   assert.deepEqual(
