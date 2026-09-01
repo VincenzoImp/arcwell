@@ -196,14 +196,16 @@ test("project snapshots reject intermediate symlink escapes and track file mode"
     symlinkSync(join(outside, "not-created"), join(root, "vendor"), "dir");
     await assert.rejects(() => ledger.saveCheckpoint(root, escaped), /symbolic link/);
     rmSync(join(root, "vendor"));
-    chmodSync(join(root, "src", "cli.ts"), 0o755);
-    const checkpoint = await prepareFeatureWorkflow({ goal: "track mode", cwd: root }, agents);
-    const saved = await ledger.saveCheckpoint(root, checkpoint);
-    chmodSync(join(root, "src", "cli.ts"), 0o644);
-    await assert.rejects(
-      () => resumeFeatureWorkflow({ cwd: root, ...saved, approvePlan: true }, ledger),
-      /project snapshot has changed/,
-    );
+    if (process.platform !== "win32") {
+      chmodSync(join(root, "src", "cli.ts"), 0o755);
+      const checkpoint = await prepareFeatureWorkflow({ goal: "track mode", cwd: root }, agents);
+      const saved = await ledger.saveCheckpoint(root, checkpoint);
+      chmodSync(join(root, "src", "cli.ts"), 0o644);
+      await assert.rejects(
+        () => resumeFeatureWorkflow({ cwd: root, ...saved, approvePlan: true }, ledger),
+        /project snapshot has changed/,
+      );
+    }
   } finally {
     rmSync(root, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });
