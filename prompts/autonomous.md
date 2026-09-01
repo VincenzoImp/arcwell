@@ -29,8 +29,9 @@ the route is a map, not a gate.
    nothing you could not already state.
 4. **Implement** — the smallest coherent change, the style already in the codebase, a failing
    test first for each behaviour change. Record what you did in the worklog as you do it.
-5. **Review** — dispatch the `reviewer` agent against `git diff` from the commit you recorded
-   before starting, never `HEAD~1`. It sees the change, not a description of it. Hand it the
+5. **Review** — write `git diff` from the commit you recorded before starting — never
+   `HEAD~1` — to a file, and dispatch the `reviewer` agent at that path. The reviewer reads;
+   it does not run git, so a diff you do not hand over is a diff it cannot see. Give it the
    spec's binding constraints verbatim, and never tell it what to overlook.
 6. **Fix** — dispatch one worker with the complete list of findings that block. Then review
    again.

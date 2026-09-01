@@ -52,10 +52,12 @@ upstream. This file is their only record.
   prompts/scout-and-plan.md         byte-identical
   prompts/implement.md              + verification step
   prompts/implement-and-review.md   + verification step, reviewer sees the diff
-  agents/planner.md                 model pin removed, handoff sentence added
-  agents/scout.md                   tool limits and refusal handling rewritten
-  agents/reviewer.md                output format and bash scope rewritten
-  agents/worker.md                  rewritten around what a headless run can do
+  agents/planner.md                 rewritten; joins the pi-subagents chain
+
+scout.md, reviewer.md and worker.md were carried here too, and were deleted in
+0.4.0: pi-subagents ships better-integrated agents under those names, and a
+package agent shadows a builtin outright rather than inheriting the fields it
+leaves unset.
 
 Everything under skills/, content/, src/, scripts/, and extensions/ outside
 extensions/upstream/ is original to this repository or to pi-setup, both MIT

@@ -114,6 +114,11 @@ Technical terms, identifiers, paths and commands keep their original form.
 
 ## Delegation
 
-The available subagents are `scout`, `planner`, `reviewer` and `worker`. A skill naming any
-other agent — `general-purpose` is the common one — means `worker`.
+`scout`, `worker`, `reviewer`, `researcher` and `oracle` come from `pi-subagents`; `planner`
+is this environment's own. A skill naming any other agent — `general-purpose` is the common
+one — means `worker`. `subagent({ action: "list" })` is the current set.
+
+They hand work over through files, not prose: scout writes `context.md`, planner writes
+`plan.md`, worker reads both. A dispatch that pastes a diff into the prompt instead of naming
+a file is spending context on something the child could read itself.
 <!-- arcwell:end -->

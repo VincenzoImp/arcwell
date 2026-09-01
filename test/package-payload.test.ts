@@ -65,7 +65,7 @@ function allowedPayloadPath(path: string): boolean {
     /^docs\/[^/]+\.md$/,
     /^skills\/[a-z-]+\/SKILL\.md$/,
     /^skills\/web\/(?:search|fetch)\.sh$/,
-    /^agents\/(?:scout|planner|worker|reviewer)\.md$/,
+    /^agents\/planner\.md$/,
     /^prompts\/[a-z-]+\.md$/,
     /^extensions\/upstream\/(?:[a-z-]+\/)?[a-z-]+\.ts$/,
     /^dist\/src\/.*\.js$/,
@@ -86,7 +86,7 @@ test("npm pack dry-run contains only the explicit publish payload", () => {
   assert.ok(paths.includes("dist/extensions/arcwell-protections.js"), "compiled Pi extension must be packed");
   assert.ok(paths.includes("content/AGENTS.md"));
   assert.ok(paths.includes("skills/code-review/SKILL.md"));
-  assert.ok(paths.includes("agents/reviewer.md"));
+  assert.ok(paths.includes("agents/planner.md"));
   assert.ok(paths.includes("prompts/implement.md"));
 
   // A skill script that arrives without its execute bit fails at the moment the agent counts

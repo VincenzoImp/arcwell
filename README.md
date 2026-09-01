@@ -1,7 +1,7 @@
 # Arcwell
 
 A batteries-included environment for [Pi](https://github.com/earendil-works/pi): a working
-agreement, fifteen skills, four subagents, prompt chains and a set of extensions, installed
+agreement, fifteen skills, a planning subagent, prompt chains and a set of extensions, installed
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
@@ -39,7 +39,7 @@ and survival across compaction.
 |---|---|
 | **Working agreement** | Precedence, evidence, communication, code style, competence gate, discretion — merged as one marked block into your `AGENTS.md`, never overwriting it |
 | **Skills** | `scope-check` `code-review` `debug` `web` `grilling` `research` `planning` `tdd` `implementing` `delegating` `verification` `domain-modeling` `handoff` `prototype` `version-control` — only descriptions sit in context; bodies load on demand |
-| **Subagents** | `scout` `planner` `worker` `reviewer`, running on `pi-subagents` with background and parallel dispatch. The reviewer reads the diff, never a description of it |
+| **Subagents** | `pi-subagents` brings twelve, with background and parallel dispatch. Arcwell adds `planner`, which reads the scout's `context.md` and writes the `plan.md` the worker reads — the handoff is files, not prose |
 | **Prompts** | `/autonomous` `/quick` `/implement` `/implement-and-review` `/scout-and-plan` |
 | **Memory** | A worklog per session, re-injected after compaction — Pi summarises what was said and cannot touch what was never said. `/lesson` records what is worth not repeating |
 | **Protections** | An effects guard that fails closed without a UI, and secret-path blocking. Both on by default |

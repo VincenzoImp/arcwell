@@ -4,7 +4,9 @@ description: Worker implements, reviewer reviews, worker applies feedback
 Use the subagent tool with the chain parameter to execute this workflow:
 
 1. First, use the "worker" agent to implement: $@
-2. Then, use the "reviewer" agent to review the implementation, passing both {previous} and the output of `git diff` so the reviewer sees the change rather than a description of it
+2. Write `git diff` to a file, then use the "reviewer" agent to review the implementation,
+   passing {previous} and that path. The reviewer reads but does not run git, so it sees the
+   change only if you hand it over
 3. Finally, use the "worker" agent to apply the feedback from the review (use {previous} placeholder)
 
 Execute this as a chain, passing output between steps via {previous}.

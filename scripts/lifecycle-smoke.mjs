@@ -118,7 +118,7 @@ try {
   // pi-subagents resolves a git source to <agentDir>/git/<host>/<repo>, so the agents ship with
   // the package rather than being copied to disk. Their absence here is silent at runtime.
   const installedRoot = join(agentDir, "git", "github.com", "VincenzoImp", "arcwell");
-  for (const name of ["planner", "reviewer", "scout", "worker"]) {
+  for (const name of ["planner"]) {
     assert(existsSync(join(installedRoot, "agents", `${name}.md`)),
       `Installed package is missing agents/${name}.md, where pi-subagents looks for it`);
   }

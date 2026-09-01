@@ -191,7 +191,7 @@ try {
   // the agents from the package manifest, so a whitelist gap surfaces only in a real install.
   for (const payloadPath of [
     "content/AGENTS.md", "content/presets.json",
-    "agents/planner.md", "agents/reviewer.md", "agents/scout.md", "agents/worker.md",
+    "agents/planner.md",
   ]) {
     const path = join(installedPath, payloadPath);
     assert(existsSync(path) && lstatSync(path).isFile(), `Git-source payload is missing ${payloadPath}`);
@@ -199,7 +199,7 @@ try {
 
   console.log(
     `Git-source transport smoke passed for ${source} (${installedManifest.name}@${installedManifest.version}): ` +
-    `${extensionPaths.length} extensions, 15 skills, 5 prompts, 4 agents.`,
+    `${extensionPaths.length} extensions, 15 skills, 5 prompts, 1 agent.`,
   );
 } finally {
   try {
