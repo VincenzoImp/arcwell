@@ -1,4 +1,4 @@
-export const ARCWELL_PACKAGE_SOURCE = "git:github.com/VincenzoImp/arcwell@v0.3.2";
+export const ARCWELL_PACKAGE_SOURCE = "git:github.com/VincenzoImp/arcwell@v0.3.3";
 
 interface SemanticPackageSource {
   identity: string;

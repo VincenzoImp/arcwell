@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+
+`0.3.2` shipped a README claiming the commands work on Windows, written before the lifecycle
+smoke proved they do not. The tag stays as published rather than being moved, and this release
+carries the corrected text: the claim is in the payload, so only a new version replaces it.
+
 ## 0.3.2
 
 Windows had never passed, and behind the first failure were two more. Fixing them let the
