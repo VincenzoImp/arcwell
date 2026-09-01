@@ -112,3 +112,36 @@ test("a path that escapes the agent directory is refused", () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("reinstalling carries existedBefore forward instead of adopting its own files", () => {
+  const root = scratch();
+  try {
+    const first = installManagedResources(root, resources);
+    assert.deepEqual(first.map((entry) => entry.existedBefore), [false, false]);
+
+    // Without the prior records a second setup sees the files the first one wrote, records
+    // them as pre-existing, and uninstall then never removes its own work.
+    const second = installManagedResources(root, resources, first);
+    assert.deepEqual(second.map((entry) => entry.existedBefore), [false, false]);
+    assert.deepEqual(removeManagedResources(root, second).removed, ["agents/scout.md", "presets.json"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("removal prunes a directory it emptied, and keeps one that still holds something", () => {
+  const root = scratch();
+  try {
+    const records = installManagedResources(root, resources);
+    removeManagedResources(root, records);
+    assert.equal(existsSync(join(root, "agents")), false, "an emptied directory is not left behind");
+
+    const withNeighbour = installManagedResources(root, resources);
+    writeFileSync(join(root, "agents", "mine.md"), "the user's own agent\n");
+    removeManagedResources(root, withNeighbour);
+    assert.equal(existsSync(join(root, "agents", "mine.md")), true);
+    assert.equal(existsSync(join(root, "agents")), true, "a directory holding anything else survives");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

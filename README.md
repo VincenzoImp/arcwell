@@ -4,7 +4,7 @@ Arcwell is a reproducible, batteries-included environment for Pi. Version `0.1.0
 from its pinned GitHub source; the npm package is not published. Its commands are `setup`,
 `doctor`, and `uninstall`.
 
-It installs a working agreement, thirteen skills, four subagents, prompt chains and a set of
+It installs a working agreement, thirteen skills, four subagents, five prompt templates and a set of
 extensions, then composes the rest from exact package sources through Pi.
 
 ## Requirements and release status
@@ -125,8 +125,9 @@ Installing an npm package or Pi package executes code with the current user's pe
 the exact source/artifact, `package.json`, `LICENSE`, `NOTICE`, native resources, and dependency tree
 before installation. Arcwell transparently declares `prepare: npm run build` because npm runs
 `prepare` for Git dependencies; it compiles the CLI and Pi extension into `dist` before use.
-`typescript@6.0.3`, `@types/node@26.4.0`, and `ajv@8.20.0` are exact production dependencies because
-that build compiles both source and tests during `npm install --omit=dev`; only
+`typescript@6.0.3` and `@types/node@26.4.0` are exact production dependencies because that build
+runs during `npm install --omit=dev`; `@earendil-works/pi-coding-agent` is a peer, per
+[`docs/packages.md`](https://github.com/earendil-works/pi), and
 `typescript-language-server@6.0.0` remains development-only. The real-package smoke rejects install
 lifecycle scripts only in downloaded third-party packages, not
 Arcwell's disclosed build step. Pin versions and integrity in controlled environments. Setup
@@ -240,7 +241,7 @@ Implemented:
 - the setup wizard, bounded lifecycle ownership, doctor, and ownership-safe uninstall with
   compensation on failure;
 - exact package filtering and Git-source distribution checks;
-- the working agreement, thirteen skills, four subagents, prompt chains, six tool postures,
+- the working agreement, thirteen skills, four subagents, five prompt templates, six tool postures,
   tool discipline, and the effects and secret-path protections;
 - fake-client scratch coverage for setup, doctor, uninstall, and filesystem restoration.
 

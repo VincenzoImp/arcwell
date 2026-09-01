@@ -71,10 +71,16 @@ test("local scratch setup, idempotent setup, doctor, and uninstall restore the e
     const initialTree = snapshotTree(root);
     const initialPackages = packages.map((item) => ({ ...item }));
 
+    const managedResources = [
+      { path: "agents/reviewer.md", content: "---\nname: reviewer\n---\nreview the diff\n" },
+      { path: "presets.json", content: '{"presets":{}}\n' },
+    ];
+    const setupDependencies = { agentDir: root, piClient: client, workingAgreement: agreement, managedResources };
+
     const manifest = createDefaultManifest();
-    const first = await applySetup(manifest, { agentDir: root, piClient: client, workingAgreement: agreement });
+    const first = await applySetup(manifest, setupDependencies);
     const afterFirst = snapshotTree(root);
-    const second = await applySetup(manifest, { agentDir: root, piClient: client, workingAgreement: agreement });
+    const second = await applySetup(manifest, setupDependencies);
     const doctor = await runDoctor({ agentDir: root, piClient: client });
 
     assert.deepEqual(second, first);
@@ -83,11 +89,18 @@ test("local scratch setup, idempotent setup, doctor, and uninstall restore the e
     assert.deepEqual(readOwnership(join(root, "arcwell", "ownership.json"))?.installedPackageSources, installs);
     assert.equal(doctor.status, "healthy");
     assert.equal(doctor.exitStatus, 0);
+    // The subagent definitions and presets must be on disk for the extensions that read them
+    // to work at all, and an idempotent second setup must leave them untouched.
+    assert.equal(readFileSync(join(root, "agents", "reviewer.md"), "utf8"), managedResources[0]!.content);
+    assert.deepEqual(first.installedResources.map((entry) => entry.path), ["agents/reviewer.md", "presets.json"]);
+    assert.ok(doctor.checks.some((check) => check.id === "resources" && check.status === "ok"));
     assert.match(readFileSync(agents, "utf8"), /^Personal instructions\n/);
     if (process.platform !== "win32") assert.equal(lstatSync(agents).mode & 0o777, 0o640);
 
     const uninstalled = await uninstallArcwell({ agentDir: root, piClient: client });
     assert.deepEqual(uninstalled.removedPackageSources, installs);
+    assert.deepEqual(uninstalled.removedResources, ["agents/reviewer.md", "presets.json"]);
+    assert.deepEqual(uninstalled.keptResources, []);
     assert.deepEqual(removals, installs);
     assert.deepEqual(packages, initialPackages);
     assert.deepEqual(snapshotTree(root), initialTree);

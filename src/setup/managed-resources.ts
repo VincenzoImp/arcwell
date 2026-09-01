@@ -11,8 +11,8 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, lstatSync, readFileSync, readdirSync, rmdirSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 import { assertNoSymbolicLinkComponents, writeFileAtomic } from "./atomic-file.js";
 
@@ -63,13 +63,20 @@ function currentDigest(path: string): string | undefined {
   return managedResourceDigest(readFileSync(path, "utf8"));
 }
 
+/**
+ * `priorRecords` carries `existedBefore` across reinstalls. Without it a second setup sees the
+ * files the first one created, records them as pre-existing, and uninstall then refuses to
+ * remove its own work forever.
+ */
 export function installManagedResources(
   agentDir: string,
   resources: readonly ManagedResource[],
+  priorRecords: readonly ManagedResourceRecord[] = [],
 ): ManagedResourceRecord[] {
   return resources.map((resource) => {
     const target = resolveManaged(agentDir, resource.path);
-    const existedBefore = currentDigest(target) !== undefined;
+    const prior = priorRecords.find((record) => record.path === resource.path);
+    const existedBefore = prior?.existedBefore ?? currentDigest(target) !== undefined;
     writeFileAtomic(target, resource.content, {
       targetDescription: `managed resource ${resource.path}`,
       defaultMode: 0o600,
@@ -117,5 +124,32 @@ export function removeManagedResources(
     if (existsSync(target)) throw new Error(`managed resource remained after removal: ${record.path}`);
     removed.push(record.path);
   }
+  pruneEmptyDirectories(agentDir, records);
   return { removed, kept };
+}
+
+/**
+ * Removing `agents/scout.md` leaves an empty `agents/` behind, and the filesystem is then not
+ * what it was before setup. Only empty directories strictly below the agent directory are
+ * taken, so a directory holding anything else — including the user's own files — survives.
+ */
+function pruneEmptyDirectories(agentDir: string, records: readonly ManagedResourceRecord[]): void {
+  const directories = [...new Set(
+    records
+      .map((record) => dirname(resolveManaged(agentDir, record.path)))
+      .filter((directory) => directory !== agentDir),
+  )].sort((left, right) => right.length - left.length);
+
+  for (const directory of directories) {
+    if (!existsSync(directory)) continue;
+    const stat = lstatSync(directory);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) continue;
+    if (readdirSync(directory).length > 0) continue;
+    try {
+      rmdirSync(directory);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "ENOTEMPTY" && code !== "EEXIST" && code !== "ENOENT") throw error;
+    }
+  }
 }

@@ -182,7 +182,11 @@ export async function applySetup(
     }
 
     for (const resource of managedResources) changedFiles.push(snapshotFile(join(agentDir, resource.path)));
-    const installedResources = installManagedResources(agentDir, managedResources);
+    const installedResources = installManagedResources(
+      agentDir,
+      managedResources,
+      priorOwnership?.installedResources ?? [],
+    );
 
     changedFiles.push(agreementSnapshot);
     mergeWorkingAgreement(agreementPath, workingAgreement);
