@@ -1,8 +1,17 @@
 {
   "name": "arcwell",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A reproducible, batteries-included environment for Pi.",
   "license": "MIT",
+  "author": "VincenzoImp",
+  "homepage": "https://github.com/VincenzoImp/arcwell#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VincenzoImp/arcwell.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VincenzoImp/arcwell/issues"
+  },
   "type": "module",
   "files": [
     "dist/src/**/*.js",
@@ -62,6 +71,11 @@
       "./prompts/scout-and-plan.md"
     ]
   },
+  "pi-subagents": {
+    "agents": [
+      "./agents"
+    ]
+  },
   "bin": {
     "arcwell": "dist/src/cli.js"
   },
@@ -86,10 +100,5 @@
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
-  },
-  "pi-subagents": {
-    "agents": [
-      "./agents"
-    ]
   }
 }

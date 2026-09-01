@@ -116,7 +116,7 @@ test("setup --manifest --yes invokes injected apply without resolving real Pi st
       isTTY: false,
       apply: async (manifest) => { calls.push(manifest.arcwellVersion); },
     }), true);
-    assert.deepEqual(calls, ["0.2.0"]);
+    assert.deepEqual(calls, ["0.3.0"]);
     assert.match(output.join(""), /setup complete/);
   } finally {
     rmSync(root, { recursive: true, force: true });

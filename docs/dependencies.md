@@ -2,7 +2,7 @@
 
 ## The catalog
 
-Four external packages. A package earns a place by saving work Arcwell would otherwise have
+Six external packages. A package earns a place by saving work Arcwell would otherwise have
 to do; anything Arcwell can carry itself, it carries.
 
 | Capability | Exact source | Why it is not internal |
@@ -10,6 +10,8 @@ to do; anything Arcwell can carry itself, it carries.
 | LSP | `npm:@spences10/pi-lsp@0.0.46` | An entire protocol: server lifecycle, diagnostics, navigation |
 | Context sidecar | `npm:@spences10/pi-context@0.1.16` | Non-trivial truncation and retrieval logic for oversized tool output |
 | MCP | `npm:@spences10/pi-mcp@0.0.60` | A protocol client with server lifecycle; Arcwell configures no servers |
+| Subagents | `npm:pi-subagents@0.62.0` | Background and parallel child sessions, spawn budgets, worktree anchoring |
+| Goal | `npm:@narumitw/pi-goal@0.54.4` | Session goals with token budgets, no-progress guards and evidence before completion |
 | Redaction | `npm:@spences10/pi-redact@0.0.15` | A credential-pattern dictionary, which ages badly when self-written |
 
 Each is an exact `npm:` source, owns exactly one capability, is removable by source identity,
@@ -27,9 +29,7 @@ neither — `Tool "todo" conflicts with ...`. The real-package smoke catches it,
 | `@juicesharp/rpiv-todo` | `extensions/upstream/todo.ts` |
 | `@juicesharp/rpiv-ask-user-question` | `extensions/upstream/questionnaire.ts` |
 | `@narumitw/pi-plan-mode` | `extensions/upstream/plan-mode/` |
-| `pi-subagents` | `extensions/upstream/subagent/` plus the four agent definitions |
 | `pi-web-access` | the `web` skill and its `search.sh` / `fetch.sh` |
-| `@narumitw/pi-goal` | nothing — autonomous goal execution is out of scope; `/autonomous` is instructions, not an engine |
 
 ## Rejected candidates
 

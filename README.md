@@ -5,9 +5,9 @@ agreement, fifteen skills, four subagents, prompt chains and a set of extensions
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.2.0 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.3.0 setup --dry-run --write-manifest arcwell.json
 # read arcwell.json and the plan, then:
-npx github:VincenzoImp/arcwell#v0.2.0 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.3.0 setup --manifest arcwell.json --yes
 ```
 
 Three commands: `setup`, `doctor`, `uninstall`. Requires Node `>=24.15.0` and Pi `0.84.4`.
