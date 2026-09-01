@@ -138,5 +138,10 @@ try {
 
   console.log("Clean copied checkout passed npm install --omit=dev, prepare build, and DefaultResourceLoader smoke.");
 } finally {
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, {
+    recursive: true,
+    force: true,
+    maxRetries: process.platform === "win32" ? 20 : 3,
+    retryDelay: 250,
+  });
 }
