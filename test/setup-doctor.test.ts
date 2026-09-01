@@ -198,6 +198,30 @@ test("doctor requires selected packages even when Arcwell did not install them",
   }
 });
 
+test("doctor reports a Pi that resolves to one version outside the package and another inside", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "doctor-nested-pi-"));
+  try {
+    writeHealthyState(root);
+    const packageRoot = join(root, "installed-arcwell");
+    mkdirSync(join(packageRoot, "dist", "extensions"), { recursive: true });
+    writeFileSync(join(packageRoot, "package.json"), JSON.stringify(healthyArcwellPackageJson));
+    writeFileSync(join(packageRoot, "dist", "extensions", "arcwell-protections.js"), "export default function () {}\n");
+    // What npm produces for a peer range: the agent runs one Pi, the extensions import another.
+    const nested = join(packageRoot, "node_modules", "@earendil-works", "pi-coding-agent");
+    mkdirSync(nested, { recursive: true });
+    writeFileSync(join(nested, "package.json"), JSON.stringify({ name: "@earendil-works/pi-coding-agent", version: "0.85.0" }));
+    const packages = userPackages(allSources);
+    (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
+
+    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+    assert.equal(report.exitStatus, 2);
+    assert.ok(report.checks.some((check) =>
+      check.id === "pi.nested" && check.status === "error" && /0\.84\.4.*0\.85\.0/.test(check.message)));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("doctor rejects invalid Arcwell package metadata, manifest, and extension exports", async (t) => {
   await t.test("metadata", async () => {
     const root = mkdtempSync(join(temporaryRoot, "doctor-package-metadata-"));

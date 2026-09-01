@@ -5,6 +5,8 @@ import test from "node:test";
 
 import { DefaultResourceLoader, SettingsManager } from "@earendil-works/pi-coding-agent";
 
+import { COMPATIBLE_PI_VERSION } from "../src/setup/pi-version.js";
+
 interface SmokeHelpers {
   createIsolatedEnvironment(source: NodeJS.ProcessEnv, isolated: {
     home: string;
@@ -199,7 +201,10 @@ test("Arcwell declares separate prepare and explicit networked Git-source smokes
     assert.equal(manifest.dependencies?.[core], undefined, `${core} must not be a runtime dependency`);
     assert.equal(manifest.devDependencies?.[core], undefined, `${core} must not be a dev dependency`);
   }
-  assert.equal(manifest.peerDependencies?.["@earendil-works/pi-coding-agent"], "*");
+  // Exact, not "*": npm installs peers automatically, so a range lets the copy resolved from
+  // inside the package drift away from the host running the agent, and three files import
+  // values rather than types. A mismatch has to fail at install, not at render.
+  assert.equal(manifest.peerDependencies?.["@earendil-works/pi-coding-agent"], COMPATIBLE_PI_VERSION);
   assert.equal(manifest.devDependencies?.typescript, undefined);
   assert.equal(manifest.devDependencies?.["@types/node"], undefined);
   assert.equal(manifest.devDependencies?.["typescript-language-server"], "6.0.0");

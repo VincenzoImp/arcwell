@@ -36,6 +36,7 @@ import {
 import { createSetupPlan } from "./plan.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import type { PiClient, PiPackage } from "./pi-client.js";
+import { COMPATIBLE_PI_VERSION, normalizedPiVersion } from "./pi-version.js";
 import type { RuntimeConfig, SetupManifest } from "./types.js";
 import {
   mergeWorkingAgreement,
@@ -158,7 +159,12 @@ export async function applySetup(
     ?? (agreementSnapshot.existed && priorAgreement.endsWith("\n"));
   const arcwellDirectoryExisted = priorOwnership?.arcwellDirectoryExisted ?? existsSync(arcwellDirectory);
 
-  await piClient.version(signal);
+  // Gated, not merely probed: doctor rejects a Pi it does not target, and setup used to
+  // install against it anyway, so the two commands answered the same question differently.
+  const piVersion = normalizedPiVersion(await piClient.version(signal));
+  if (piVersion !== COMPATIBLE_PI_VERSION) {
+    throw new Error(`Arcwell targets Pi ${COMPATIBLE_PI_VERSION}; this machine runs ${piVersion ?? "an unreadable version"}`);
+  }
   const initiallyInstalled = await piClient.list(signal);
   const priorOwnedSources = new Set(priorOwnership?.installedPackageSources ?? []);
   assertNoPackageConflicts(desired, initiallyInstalled);

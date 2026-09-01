@@ -17,9 +17,10 @@ import {
 } from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
 import { moduleNames, protectionNames, type RuntimeConfig } from "./types.js";
+import { COMPATIBLE_PI_VERSION, nestedPiVersion, normalizedPiVersion } from "./pi-version.js";
 import { managedWorkingAgreementDigest } from "./working-agreement.js";
 
-export const COMPATIBLE_PI_VERSION = "0.84.4";
+export { COMPATIBLE_PI_VERSION };
 
 export type DoctorCheckStatus = "ok" | "warning" | "error";
 export type DoctorExitStatus = 0 | 1 | 2;
@@ -59,11 +60,6 @@ function readRegularText(path: string): string {
   const stat = lstatSync(path);
   if (stat.isSymbolicLink() || !stat.isFile()) throw new Error("not a regular file");
   return readFileSync(path, "utf8");
-}
-
-function normalizedPiVersion(output: string): string | undefined {
-  const match = /(?:^|\s)(\d+\.\d+\.\d+)(?:\s|$)/.exec(output);
-  return match?.[1];
 }
 
 function sourceCheckId(source: string): string {
@@ -106,10 +102,11 @@ export async function runDoctor(
   const ownershipPath = join(dependencies.agentDir, "arcwell", "ownership.json");
   const agreementPath = join(dependencies.agentDir, "AGENTS.md");
 
+  let hostPiVersion: string | undefined;
   try {
-    const version = normalizedPiVersion(await dependencies.piClient.version(signal));
-    checks.push(version === COMPATIBLE_PI_VERSION
-      ? { id: "pi.version", status: "ok", message: `Pi ${version} is compatible` }
+    hostPiVersion = normalizedPiVersion(await dependencies.piClient.version(signal));
+    checks.push(hostPiVersion === COMPATIBLE_PI_VERSION
+      ? { id: "pi.version", status: "ok", message: `Pi ${hostPiVersion} is compatible` }
       : { id: "pi.version", status: "error", message: `Pi ${COMPATIBLE_PI_VERSION} is required` });
   } catch {
     checks.push({ id: "pi.version", status: "error", message: "Unable to determine a compatible Pi version" });
@@ -195,6 +192,17 @@ export async function runDoctor(
           const detail = error instanceof Error ? error.message : String(error);
           checks.push({ id: "package.arcwell", status: "error", message: `Required user package ${source} is invalid: ${detail}` });
         }
+        // The extensions import values from Pi, and Node resolves those from the copy npm put
+        // inside the package rather than from the host. Two versions there is two module
+        // instances of the same class, which fails at render time and nowhere earlier.
+        const nested = nestedPiVersion(installedPackage.installedPath);
+        checks.push(nested === undefined || hostPiVersion === undefined || nested === hostPiVersion
+          ? { id: "pi.nested", status: "ok", message: "Pi resolves to one version inside and outside the package" }
+          : {
+            id: "pi.nested",
+            status: "error",
+            message: `Pi ${hostPiVersion} is running the agent but the Arcwell package resolves Pi ${nested}`,
+          });
         continue;
       }
       checks.push({ id: sourceCheckId(source), status: "ok", message: `Required user package ${source} is present` });

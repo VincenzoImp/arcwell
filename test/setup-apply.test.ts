@@ -35,7 +35,9 @@ class FakePiClient implements PiClient {
     this.installed = sources.map((source) => fixturePiPackage(source));
   }
 
-  async version(): Promise<string> { return "pi 0.84.4"; }
+  reportedVersion = "pi 0.84.4";
+
+  async version(): Promise<string> { return this.reportedVersion; }
   async list(): Promise<PiPackage[]> { return this.installed.map((item) => ({ ...item })); }
   async install(source: string): Promise<void> {
     this.installs.push(source);
@@ -59,6 +61,24 @@ test("apply preflights npm identity conflicts before mutation", async () => {
     }), /package identity conflict.*@spences10\/pi-lsp/);
     assert.deepEqual(client.installs, []);
     assert.deepEqual(client.removals, []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("apply refuses a Pi it does not target, before mutation", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "apply-pi-version-"));
+  try {
+    const client = new FakePiClient();
+    client.reportedVersion = "pi 0.85.0";
+    await assert.rejects(applySetup(createDefaultManifest(), {
+      agentDir: root,
+      piClient: client,
+      workingAgreement: agreement,
+    }), /targets Pi 0\.84\.4.*runs 0\.85\.0/);
+    assert.deepEqual(client.installs, []);
+    assert.equal(existsSync(join(root, "AGENTS.md")), false);
+    assert.equal(existsSync(join(root, "arcwell")), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

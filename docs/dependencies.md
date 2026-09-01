@@ -47,7 +47,7 @@ Arcwell targets Node `>=24.15.0` and the locally audited Pi 0.84.4 API.
 
 | | |
 |---|---|
-| `peerDependencies` | `@earendil-works/pi-coding-agent: "*"` |
+| `peerDependencies` | `@earendil-works/pi-coding-agent: "0.84.4"` |
 | `dependencies` | `typescript@6.0.3`, `@types/node@26.4.0` |
 | `devDependencies` | `typescript-language-server@6.0.0` |
 
@@ -57,6 +57,17 @@ different module instances from the Pi runtime that loads it. An earlier revisio
 runtime dependency because the standalone CLI executed Pi APIs outside a Pi host through the
 experimental commands. Those commands are gone, and the `--omit=dev` prepare smoke confirms
 npm resolves the peer for the Git-source install path.
+
+**Why the peer range is exact.** npm installs peer dependencies automatically, so declaring
+one does not stop a second copy from existing: a Git install measures 170 MB against a 335 KB
+payload, and 141 MB of that is Pi under the package's own `node_modules`. That copy is not
+inert — `src/setup/agent-dir.ts`, `extensions/upstream/preset.ts` and
+`extensions/upstream/tools.ts` import **values** (`getAgentDir`, `CONFIG_DIR_NAME`,
+`DynamicBorder`, `getSettingsListTheme`), and Node resolves those from the nearest
+`node_modules`, which is the nested one. A range would let it drift from the host on Pi's next
+release, and `DynamicBorder` crossing two module instances of the same class fails at render
+time and nowhere earlier. The exact pin turns that into a resolution error at install, and
+`doctor`'s `pi.nested` check catches an environment where it happened anyway.
 
 **Why the compiler is a runtime dependency.** npm runs `prepare: npm run build` for Git
 dependencies even under `npm install --omit=dev`, so the compiler and its types must be
