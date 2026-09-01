@@ -138,9 +138,12 @@ trust state, pre-existing packages and unrelated bytes are untouched.
 
 Not published to npm; installation uses the pinned GitHub ref. The full cycle — install from
 the tag, `setup`, `doctor`, every resource loading with all seven packages present, then
-`uninstall` — passes against a real Pi on Linux, macOS and Windows, in CI, on every tag.
+`uninstall` — passes against a real Pi on Linux and macOS, in CI, on every tag.
 
-One test is skipped on Windows: forcing a filesystem cleanup failure needs POSIX permission
-semantics. Everything else runs everywhere.
+**The three commands do not run on Windows.** They invoke `pi` from `PATH` with `shell: false`,
+and npm installs it there as a `.cmd` shim, which Node will not spawn that way. Everything
+Arcwell *installs* works on Windows — Pi loads the extensions, skills, prompts and agents, and
+the package smokes pass there — but composing the environment has to be done from Linux or
+macOS, or by running Pi's own `pi install` commands directly.
 
 MIT. `NOTICE` records the redistributed MIT work from Pi's own examples.

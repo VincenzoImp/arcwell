@@ -2,8 +2,16 @@
 
 ## 0.3.2
 
-The first version verified on all three platforms. Windows had never passed, and behind the
-first failure were two more.
+Windows had never passed, and behind the first failure were two more. Fixing them let the
+lifecycle smoke run there for the first time, which found a fourth: **the three commands cannot
+invoke `pi` on Windows at all.** `createPiClient` spawns it from `PATH` with `shell: false`, and
+npm installs it there as a `.cmd` shim. Every Windows check that passes spawns
+`node <pi>/dist/bundle/cli.js` instead, which is why nothing had caught it.
+
+This is recorded, not fixed: the repair is either a shell path with argument validation or a
+dependency, in the code that installs packages, and that is a decision to take deliberately.
+The README states the limitation and CI skips the lifecycle step on Windows rather than
+reporting a known gap as a build failure.
 
 ### Fixed
 
