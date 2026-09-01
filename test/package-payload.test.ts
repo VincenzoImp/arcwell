@@ -59,11 +59,13 @@ function allowedPayloadPath(path: string): boolean {
     /^NOTICE$/,
     /^package\.json$/,
     /^content\/AGENTS\.md$/,
+    /^content\/presets\.json$/,
     /^docs\/[^/]+\.md$/,
     /^skills\/[a-z-]+\/SKILL\.md$/,
     /^skills\/web\/(?:search|fetch)\.sh$/,
     /^agents\/(?:scout|planner|worker|reviewer)\.md$/,
     /^prompts\/(?:implement|implement-and-review|scout-and-plan)\.md$/,
+    /^extensions\/upstream\/(?:[a-z-]+\/)?[a-z-]+\.ts$/,
     /^dist\/src\/.*\.js$/,
     /^dist\/extensions\/(?:arcwell-protections|effects)\.js$/,
   ].some((pattern) => pattern.test(path));
@@ -131,8 +133,17 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
     assert.deepEqual(
       extensions.extensions
         .filter((entry) => belongsTo(packageRoot, entry.resolvedPath))
-        .map((entry) => relative(packageRoot, entry.resolvedPath).replaceAll("\\", "/")),
-      ["dist/extensions/arcwell-protections.js"],
+        .map((entry) => relative(packageRoot, entry.resolvedPath).replaceAll("\\", "/"))
+        .sort(),
+      [
+        "dist/extensions/arcwell-protections.js",
+        "extensions/upstream/plan-mode/index.ts",
+        "extensions/upstream/preset.ts",
+        "extensions/upstream/questionnaire.ts",
+        "extensions/upstream/subagent/index.ts",
+        "extensions/upstream/todo.ts",
+        "extensions/upstream/tools.ts",
+      ],
     );
     assert.deepEqual(
       loader.getSkills().skills

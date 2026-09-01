@@ -15,5 +15,9 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  // extensions/upstream holds Pi's own example extensions, redistributed as TypeScript and
+  // loaded by Pi's runtime, which type-checks nothing. Keeping them out of the build is what
+  // lets them stay byte-identical to upstream (see NOTICE) instead of being edited to satisfy
+  // this project's strictness.
+  "include": ["src/**/*.ts", "extensions/*.ts", "test/**/*.ts"]
 }

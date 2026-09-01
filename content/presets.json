@@ -1,0 +1,103 @@
+{
+  "research": {
+    "thinkingLevel": "high",
+    "tools": [
+      "read",
+      "grep",
+      "find",
+      "ls",
+      "context_search",
+      "context_get",
+      "context_list",
+      "context_stats",
+      "lsp_diagnostics",
+      "lsp_diagnostics_many",
+      "lsp_hover",
+      "lsp_definition",
+      "lsp_references",
+      "lsp_document_symbols",
+      "lsp_find_symbol"
+    ],
+    "instructions": "READ-ONLY RESEARCH MODE. Investigate thoroughly and report evidence. Do not edit, write, install, commit, push, or run mutating commands. Ask before leaving this mode."
+  },
+  "plan": {
+    "thinkingLevel": "high",
+    "tools": [
+      "read",
+      "grep",
+      "find",
+      "ls",
+      "context_search",
+      "context_get",
+      "context_list",
+      "context_stats",
+      "lsp_diagnostics",
+      "lsp_diagnostics_many",
+      "lsp_hover",
+      "lsp_definition",
+      "lsp_references",
+      "lsp_document_symbols",
+      "lsp_find_symbol"
+    ],
+    "instructions": "PLANNING MODE. Inspect the system read-only, surface assumptions and risks, and produce an executable plan with explicit verification. Do not modify files or external state."
+  },
+  "implement": {
+    "thinkingLevel": "high",
+    "tools": [
+      "read",
+      "bash",
+      "edit",
+      "write",
+      "grep",
+      "find",
+      "ls",
+      "context_search",
+      "context_get",
+      "context_export",
+      "context_list",
+      "context_stats",
+      "context_purge",
+      "lsp_diagnostics",
+      "lsp_diagnostics_many",
+      "lsp_hover",
+      "lsp_definition",
+      "lsp_references",
+      "lsp_document_symbols",
+      "lsp_find_symbol",
+      "subagent",
+      "team",
+      "todo",
+      "questionnaire"
+    ],
+    "instructions": "IMPLEMENTATION MODE. Follow project instructions, use tests and diagnostics, preserve secrets, request authorization for externally visible or destructive actions, and provide fresh verification before completion claims."
+  },
+  "review": {
+    "thinkingLevel": "high",
+    "tools": [
+      "read",
+      "grep",
+      "find",
+      "ls",
+      "context_search",
+      "context_get",
+      "context_list",
+      "context_stats",
+      "lsp_diagnostics",
+      "lsp_diagnostics_many",
+      "lsp_hover",
+      "lsp_definition",
+      "lsp_references",
+      "lsp_document_symbols",
+      "lsp_find_symbol"
+    ],
+    "instructions": "REVIEW MODE. Inspect changes read-only, prioritize correctness and security findings, cite evidence, and avoid style-only churn. Do not modify files."
+  },
+  "fast": {
+    "thinkingLevel": "medium",
+    "instructions": "FAST MODE. Prefer the smallest correct solution, keep investigation proportional to risk, and verify the result."
+  },
+  "max": {
+    "thinkingLevel": "max",
+    "instructions": "MAX-QUALITY MODE. Use only for critical reasoning where the expected quality gain justifies higher latency and cost."
+  }
+}

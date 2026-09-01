@@ -28,7 +28,9 @@ test("package manifest declares the exact native Pi resource set", () => {
   assert.deepEqual(pkg.files, [
     "dist/src/**/*.js",
     "dist/extensions/*.js",
+    "extensions/upstream/**/*.ts",
     "content/AGENTS.md",
+    "content/presets.json",
     "skills/*/SKILL.md",
     "skills/*/*.sh",
     "agents/*.md",
@@ -43,7 +45,15 @@ test("package manifest declares the exact native Pi resource set", () => {
   assert.equal(pkg.scripts?.prepack, "npm --silent run build");
   assert.equal(pkg.scripts?.["test:packages"], "npm run build && node scripts/pi-package-smoke.mjs");
   assert.deepEqual(pkg.pi, {
-    extensions: ["./dist/extensions/arcwell-protections.js"],
+    extensions: [
+      "./dist/extensions/arcwell-protections.js",
+      "./extensions/upstream/subagent/index.ts",
+      "./extensions/upstream/plan-mode/index.ts",
+      "./extensions/upstream/preset.ts",
+      "./extensions/upstream/questionnaire.ts",
+      "./extensions/upstream/todo.ts",
+      "./extensions/upstream/tools.ts",
+    ],
     skills: [
       "./skills/code-review/SKILL.md",
       "./skills/debug/SKILL.md",
@@ -112,8 +122,19 @@ test("DefaultResourceLoader discovers only package resources without project lea
     const extensions = loader.getExtensions();
     assert.deepEqual(extensions.errors, []);
     assert.deepEqual(
-      extensions.extensions.filter((entry) => belongsToPackage(entry.resolvedPath)).map((entry) => entry.path.replaceAll("\\", "/").split("/").at(-1)),
-      ["arcwell-protections.js"],
+      extensions.extensions
+        .filter((entry) => belongsToPackage(entry.resolvedPath))
+        .map((entry) => relative(process.cwd(), entry.resolvedPath).replaceAll("\\", "/"))
+        .sort(),
+      [
+        "dist/extensions/arcwell-protections.js",
+        "extensions/upstream/plan-mode/index.ts",
+        "extensions/upstream/preset.ts",
+        "extensions/upstream/questionnaire.ts",
+        "extensions/upstream/subagent/index.ts",
+        "extensions/upstream/todo.ts",
+        "extensions/upstream/tools.ts",
+      ],
     );
     // A colon-space inside an unquoted description parses as a nested YAML mapping and the
     // skill is dropped silently. Assert the diagnostics so the cause is named, not inferred

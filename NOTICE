@@ -4,6 +4,34 @@ Copyright (c) 2026 Arcwell contributors
 Arcwell's own source, native Pi resources, content, and documentation are
 licensed under the MIT License in LICENSE, except for the files named below.
 
+Pi coding agent — example extensions
+------------------------------------
+
+Upstream:  @earendil-works/pi-coding-agent
+Project:   https://github.com/earendil-works/pi
+Path:      packages/coding-agent/examples/extensions/
+Licence:   MIT, Copyright (c) 2025 Mario Zechner
+
+Redistributed as TypeScript and loaded by Pi's own runtime, so they are neither
+compiled nor held to this project's compiler strictness (see tsconfig.json).
+Each file carries the same provenance in its own header.
+
+Byte-identical to upstream:
+
+  extensions/upstream/preset.ts
+  extensions/upstream/questionnaire.ts
+  extensions/upstream/todo.ts
+  extensions/upstream/tools.ts
+  extensions/upstream/plan-mode/utils.ts
+  extensions/upstream/subagent/agents.ts
+  extensions/upstream/subagent/index.ts
+
+Modified, and how:
+
+  extensions/upstream/plan-mode/index.ts
+      registers /plan-todos instead of /todos, because todo.ts owns /todos and
+      the second registration would shadow it
+
 Pi coding agent — example subagents and prompt templates
 --------------------------------------------------------
 
@@ -25,8 +53,9 @@ upstream. This file is their only record.
   agents/reviewer.md                output format and bash scope rewritten
   agents/worker.md                  rewritten around what a headless run can do
 
-Everything under skills/, content/, extensions/, src/, and scripts/ is original
-to this repository or to pi-setup, both MIT under LICENSE.
+Everything under skills/, content/, src/, scripts/, and extensions/ outside
+extensions/upstream/ is original to this repository or to pi-setup, both MIT
+under LICENSE.
 
 The npm dependencies and Pi packages named by Arcwell are separate works and
 remain subject to their respective licenses and notices. They are not copied
