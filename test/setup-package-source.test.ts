@@ -9,14 +9,14 @@ import {
 
 const equivalentArcwellSources = [
   ARCWELL_PACKAGE_SOURCE,
-  "https://github.com/VincenzoImp/arcwell@v0.3.1",
-  "git:https://github.com/VincenzoImp/arcwell@v0.3.1",
-  "ssh://git@github.com/VincenzoImp/arcwell@v0.3.1",
-  "git:ssh://git@github.com/VincenzoImp/arcwell@v0.3.1",
-  "git:git@github.com:VincenzoImp/arcwell@v0.3.1",
-  "git:www.github.com/VincenzoImp/arcwell@v0.3.1",
-  "https://www.github.com/VincenzoImp/arcwell@v0.3.1",
-  "git:git@www.github.com:VincenzoImp/arcwell@v0.3.1",
+  "https://github.com/VincenzoImp/arcwell@v0.3.2",
+  "git:https://github.com/VincenzoImp/arcwell@v0.3.2",
+  "ssh://git@github.com/VincenzoImp/arcwell@v0.3.2",
+  "git:ssh://git@github.com/VincenzoImp/arcwell@v0.3.2",
+  "git:git@github.com:VincenzoImp/arcwell@v0.3.2",
+  "git:www.github.com/VincenzoImp/arcwell@v0.3.2",
+  "https://www.github.com/VincenzoImp/arcwell@v0.3.2",
+  "git:git@www.github.com:VincenzoImp/arcwell@v0.3.2",
 ] as const;
 
 test("Pi-supported Arcwell Git forms normalize to one repository identity and same-ref source", () => {
@@ -27,7 +27,7 @@ test("Pi-supported Arcwell Git forms normalize to one repository identity and sa
 });
 
 test("raw SCP syntax without the git prefix remains a local source like Pi 0.84.4", () => {
-  const rawScpSource = "git@github.com:VincenzoImp/arcwell@v0.3.1";
+  const rawScpSource = "git@github.com:VincenzoImp/arcwell@v0.3.2";
   assert.equal(packageSourceIdentity(rawScpSource), undefined);
   assert.equal(packageSourcesEquivalent(rawScpSource, ARCWELL_PACKAGE_SOURCE), false);
   assert.equal(

@@ -5,9 +5,9 @@ agreement, fifteen skills, four subagents, prompt chains and a set of extensions
 reproducibly from one portable manifest and removable without residue.
 
 ```bash
-npx github:VincenzoImp/arcwell#v0.3.1 setup --dry-run --write-manifest arcwell.json
+npx github:VincenzoImp/arcwell#v0.3.2 setup --dry-run --write-manifest arcwell.json
 # read arcwell.json and the plan, then:
-npx github:VincenzoImp/arcwell#v0.3.1 setup --manifest arcwell.json --yes
+npx github:VincenzoImp/arcwell#v0.3.2 setup --manifest arcwell.json --yes
 ```
 
 Three commands: `setup`, `doctor`, `uninstall`. Requires Node `>=24.15.0` and Pi `0.84.4`.
@@ -138,7 +138,9 @@ trust state, pre-existing packages and unrelated bytes are untouched.
 
 Not published to npm; installation uses the pinned GitHub ref. The full cycle — install from
 the tag, `setup`, `doctor`, every resource loading with all seven packages present, then
-`uninstall` — passes against a real Pi on Linux and macOS, in CI, on every tag. Windows runs
-the unit tests; its smokes are not yet green, so no Windows claim is made here.
+`uninstall` — passes against a real Pi on Linux, macOS and Windows, in CI, on every tag.
+
+One test is skipped on Windows: forcing a filesystem cleanup failure needs POSIX permission
+semantics. Everything else runs everywhere.
 
 MIT. `NOTICE` records the redistributed MIT work from Pi's own examples.

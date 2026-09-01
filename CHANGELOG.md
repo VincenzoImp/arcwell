@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.2
+
+The first version verified on all three platforms. Windows had never passed, and behind the
+first failure were two more.
+
+### Fixed
+
+- **`check:upstream` compared line endings.** A Windows checkout rewrites the redistributed
+  sources to CRLF while the copy under `node_modules` keeps LF, so every comparable file
+  reported drift. The check defends content, not the separator the working tree happens to use.
+- Two test assertions assumed POSIX: a worklog path matched against a regex containing a
+  forward slash, and the execute bit on skill scripts, which a Windows working tree does not
+  carry for `npm pack` to read. The bit is asserted where it can exist — so a release has to be
+  cut on POSIX — and the exact joined path is now compared instead of a suffix.
+- `arcwell-memory` reached its context through `unknown` with optional members, so if Pi renamed
+  `getSessionFile` the build would stay green and every session would quietly share one
+  `ephemeral` worklog. It now uses the real shape, checked at both call sites against
+  `ReadonlySessionManager`.
+
 ## 0.3.1
 
 Every version bump rejects the previous manifest, patch releases included: `parseSetupManifest`
