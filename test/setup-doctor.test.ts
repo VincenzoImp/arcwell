@@ -19,7 +19,10 @@ const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
 const agreement = "<!-- arcwell:start -->\nArcwell rules\n<!-- arcwell:end -->\n";
 const arcwellSource = ARCWELL_PACKAGE_SOURCE;
-const allSources = [arcwellSource, ...PACKAGE_CATALOG.map((entry) => entry.source)];
+// What a default setup actually installs: claudeCli is the one entry that is off unless asked
+// for, so including it here would make every fixture an unrealistic environment.
+const allSources = [arcwellSource, ...PACKAGE_CATALOG.filter((entry) => entry.defaultEnabled).map((entry) => entry.source)];
+const claudeCliSource = PACKAGE_CATALOG.find((entry) => entry.capability === "claudeCli")!.source;
 const guarded: RuntimeConfig = {
   schemaVersion: 1,
   posture: "guarded",
@@ -103,7 +106,7 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
   const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
   try {
     writeHealthyState(root);
-    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.5.0";
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.5.1";
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push({
       ...fixturePiPackage(equivalentSource),
@@ -197,6 +200,53 @@ test("doctor requires selected packages even when Arcwell did not install them",
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("doctor warns on both halves of the Claude billing path", async (t) => {
+  const withProvider = (root: string, provider?: string): void => {
+    writeFileSync(join(root, "settings.json"), JSON.stringify(provider ? { defaultProvider: provider } : {}));
+  };
+
+  await t.test("adapter off while the provider is anthropic", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-claude-off-"));
+    try {
+      writeHealthyState(root);
+      withProvider(root, "anthropic");
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+      assert.ok(report.checks.some((check) =>
+        check.id === "provider.claudeCli" && check.status === "warning" && /billed per token/.test(check.message)));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // The half that bit first: installing it changes nothing until the provider points at it.
+  await t.test("adapter installed but never selected", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-claude-unselected-"));
+    try {
+      const withAdapter = [...allSources, claudeCliSource];
+      writeHealthyState(root, withAdapter);
+      withProvider(root, undefined);
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
+      assert.ok(report.checks.some((check) =>
+        check.id === "provider.claudeCli" && check.status === "warning" && /defaultProvider is unset/.test(check.message)));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  await t.test("adapter installed and selected is silent", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-claude-selected-"));
+    try {
+      const withAdapter = [...allSources, claudeCliSource];
+      writeHealthyState(root, withAdapter);
+      withProvider(root, "pi-claude-cli");
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
+      assert.equal(report.checks.some((check) => check.id === "provider.claudeCli"), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 test("doctor reports a Pi that resolves to one version outside the package and another inside", async () => {

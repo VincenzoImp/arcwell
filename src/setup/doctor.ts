@@ -62,6 +62,9 @@ function readRegularText(path: string): string {
   return readFileSync(path, "utf8");
 }
 
+/** The provider name pi-claude-cli registers, which is the package name rather than "claude". */
+const CLAUDE_CLI_PROVIDER = "pi-claude-cli";
+
 /** The provider selected in Pi's settings, or undefined when unreadable. Never auth state. */
 function configuredProvider(agentDir: string): string | undefined {
   try {
@@ -245,10 +248,20 @@ export async function runDoctor(
     }
 
     // Configuration, not authentication state: which provider is selected, never whether or how
-    // it is logged in. A subscription login without the CLI adapter is billed per token, and
-    // nothing else in the system would ever mention it.
+    // it is logged in. Both halves matter, and the second is the one that bit first: installing
+    // the adapter changes nothing until the provider points at it, and until then a subscription
+    // login is billed per token with nothing in the system saying so.
     const claudeCli = PACKAGE_CATALOG.find((entry) => entry.capability === "claudeCli")!;
-    if (configuredProvider(dependencies.agentDir) === "anthropic" && !effectivePackage(claudeCli.source)) {
+    const provider = configuredProvider(dependencies.agentDir);
+    if (effectivePackage(claudeCli.source)) {
+      if (provider !== CLAUDE_CLI_PROVIDER) {
+        checks.push({
+          id: "provider.claudeCli",
+          status: "warning",
+          message: `modules.claudeCli is on but defaultProvider is ${provider ?? "unset"}; select ${CLAUDE_CLI_PROVIDER} for the adapter to route anything`,
+        });
+      }
+    } else if (provider === "anthropic") {
       checks.push({
         id: "provider.claudeCli",
         status: "warning",

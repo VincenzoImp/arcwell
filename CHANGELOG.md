@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.1
+
+### Fixed
+
+- **The Claude billing warning missed the case that actually happens.** It fired only when
+  `defaultProvider` was literally `anthropic`, and a fresh install leaves that key unset — so a
+  subscription login went on being billed per token in silence. It now covers the other half
+  too, which is the one that bit first: **installing the adapter changes nothing until the
+  provider points at it**. The provider name is `pi-claude-cli`, the package name, not `claude`
+  or `claude-cli`.
+- The doctor fixtures installed every catalog package including the one that is off by default,
+  which is not an environment `setup` can produce.
+
 ## 0.5.0
 
 Breaking: ownership gains `subagentOverridesWritten`, so a 0.4.0 ownership file is rejected.
