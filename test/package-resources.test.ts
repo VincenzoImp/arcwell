@@ -47,7 +47,16 @@ test("package manifest declares the exact native Pi resource set", () => {
     skills: [
       "./skills/code-review/SKILL.md",
       "./skills/debug/SKILL.md",
+      "./skills/delegating/SKILL.md",
+      "./skills/domain-modeling/SKILL.md",
+      "./skills/grilling/SKILL.md",
+      "./skills/handoff/SKILL.md",
+      "./skills/implementing/SKILL.md",
+      "./skills/planning/SKILL.md",
+      "./skills/research/SKILL.md",
       "./skills/scope-check/SKILL.md",
+      "./skills/tdd/SKILL.md",
+      "./skills/verification/SKILL.md",
       "./skills/web/SKILL.md",
     ],
     prompts: ["./prompts/implement.md", "./prompts/implement-and-review.md", "./prompts/scout-and-plan.md"],
@@ -106,10 +115,20 @@ test("DefaultResourceLoader discovers only package resources without project lea
       extensions.extensions.filter((entry) => belongsToPackage(entry.resolvedPath)).map((entry) => entry.path.replaceAll("\\", "/").split("/").at(-1)),
       ["arcwell-protections.js"],
     );
+    // A colon-space inside an unquoted description parses as a nested YAML mapping and the
+    // skill is dropped silently. Assert the diagnostics so the cause is named, not inferred
+    // from a missing entry in the list below.
+    assert.deepEqual(
+      loader.getSkills().diagnostics.filter((entry) => entry.path !== undefined && belongsToPackage(entry.path)),
+      [],
+    );
     const skills = loader.getSkills().skills;
     assert.deepEqual(
       skills.filter((skill) => belongsToPackage(skill.filePath)).map((skill) => skill.name).sort(),
-      ["code-review", "debug", "scope-check", "web"],
+      [
+        "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
+        "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+      ],
     );
     // Subagent definitions are not package resources: Pi's manifest carries no `agents` key,
     // and the subagent extension reads them from <agentDir>/agents. Setup installs them there,

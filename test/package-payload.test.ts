@@ -60,7 +60,7 @@ function allowedPayloadPath(path: string): boolean {
     /^package\.json$/,
     /^content\/AGENTS\.md$/,
     /^docs\/[^/]+\.md$/,
-    /^skills\/(?:code-review|debug|scope-check|web)\/SKILL\.md$/,
+    /^skills\/[a-z-]+\/SKILL\.md$/,
     /^skills\/web\/(?:search|fetch)\.sh$/,
     /^agents\/(?:scout|planner|worker|reviewer)\.md$/,
     /^prompts\/(?:implement|implement-and-review|scout-and-plan)\.md$/,
@@ -139,7 +139,10 @@ test("DefaultResourceLoader discovers exact resources from a packed and stably e
         .filter((skill) => belongsTo(packageRoot, skill.filePath))
         .map((skill) => skill.name)
         .sort(),
-      ["code-review", "debug", "scope-check", "web"],
+      [
+        "code-review", "debug", "delegating", "domain-modeling", "grilling", "handoff",
+        "implementing", "planning", "research", "scope-check", "tdd", "verification", "web",
+      ],
     );
     assert.deepEqual(
       loader.getPrompts().prompts

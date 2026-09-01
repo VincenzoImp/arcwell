@@ -39,6 +39,12 @@ does not.
 Each step should halve the space. If a step does not eliminate half the possibilities,
 choose a different step.
 
+**When the system has several components** — CI to build to signing, API to service to
+database — bisecting by guesswork is slow because the failure is reported by whichever
+component noticed, not the one at fault. Instrument the joins instead: at each boundary,
+record what went in and what came out, then run once. One run tells you which hop lost the
+value, and the search collapses to that component.
+
 ## 4. Prove the cause before fixing it
 
 State the cause as a claim that could be wrong: *"X fails because Y."*
@@ -59,7 +65,16 @@ testing something else.
 Then fix, and watch it pass. A fix without a red-then-green cycle is a fix you cannot
 distinguish from a coincidence.
 
-## 6. Check the neighbourhood
+## 6. Three failed fixes means the architecture, not the hypothesis
+
+Count them. When each fix works and reveals a new problem somewhere else — a different
+shared state, a different coupling — you are not failing to find the cause. You are finding
+that the shape is wrong.
+
+At the third one, stop fixing and say so. Name the pattern the failures share and what
+changing it would cost. A fourth fix on this path buys another symptom.
+
+## 7. Check the neighbourhood
 
 The same mistake is rarely alone. Search for the pattern you just fixed: the same call
 without the same guard, the same missing check, the same wrong assumption. Fix or report

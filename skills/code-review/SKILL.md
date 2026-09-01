@@ -25,6 +25,25 @@ SEVERITY  file:line
   <failure: specific inputs/state → specific wrong outcome>
 ```
 
+## Two axes, kept apart
+
+A change can satisfy one and fail the other:
+
+- **Spec** — does it do what was asked, all of it, and nothing else?
+- **Standards** — does it follow the conventions of this codebase?
+
+Code that follows every convention while implementing the wrong thing passes Standards and
+fails Spec. Code that does exactly what the issue asked while breaking the project's
+patterns does the reverse.
+
+When the diff is large enough to warrant it, run the two as parallel subagents so neither
+colours the other, and report them under separate headings. **Do not merge or rerank the
+findings across axes** — collapsing them is what lets a clean Standards report bury a
+missing requirement.
+
+Give the Spec reviewer the originating spec and the diff; give the Standards reviewer the
+project's documented conventions and the diff. Neither gets your session history.
+
 ## Severity
 
 - **Critical** — data loss, credential exposure, a security boundary that does not hold,
@@ -52,6 +71,35 @@ is lost among them.
 4. **The boundary between "verified" and "assumed".** Which claims in the change
    description were actually measured?
 5. **Scope.** Does the diff do what it says, and only that?
+
+## Structural smells
+
+Where the project documents no convention, these still apply — as labelled heuristics
+("possible feature envy"), never as violations. **A documented project standard overrides
+any of them**, and anything a linter already enforces is not worth a finding.
+
+Each reads *what it is* → *what to do*:
+
+- **Mysterious name** — a name that does not reveal what it does or holds → rename it; if
+  no honest name comes, the design is murky.
+- **Duplicated code** — the same logic shape in more than one hunk → extract, call from both.
+- **Feature envy** — a method reaching into another object's data more than its own → move
+  it onto the data it envies.
+- **Data clumps** — the same fields always travelling together → they are a type; make it.
+- **Primitive obsession** — a string or number standing in for a domain concept → give the
+  concept its own small type.
+- **Repeated switches** — the same cascade on the same type in several places → polymorphism,
+  or one shared map.
+- **Shotgun surgery** — one logical change forcing scattered edits → gather what changes
+  together.
+- **Divergent change** — one module edited for unrelated reasons → split by reason.
+- **Speculative generality** — parameters and hooks for needs the spec does not have →
+  delete; inline back until a real need appears.
+- **Message chains** — `a.b().c().d()` the caller should not depend on → hide the walk
+  behind one method.
+- **Middle man** — a unit that mostly delegates onward → cut it, call the real target.
+- **Refused bequest** — an implementer ignoring most of what it inherits → composition
+  instead.
 
 ## Verify before reporting
 

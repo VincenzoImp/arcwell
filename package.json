@@ -30,7 +30,16 @@
     "skills": [
       "./skills/code-review/SKILL.md",
       "./skills/debug/SKILL.md",
+      "./skills/delegating/SKILL.md",
+      "./skills/domain-modeling/SKILL.md",
+      "./skills/grilling/SKILL.md",
+      "./skills/handoff/SKILL.md",
+      "./skills/implementing/SKILL.md",
+      "./skills/planning/SKILL.md",
+      "./skills/research/SKILL.md",
       "./skills/scope-check/SKILL.md",
+      "./skills/tdd/SKILL.md",
+      "./skills/verification/SKILL.md",
       "./skills/web/SKILL.md"
     ],
     "prompts": [
