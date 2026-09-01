@@ -17,6 +17,7 @@
     "docs/*.md",
     "README.md",
     "CHANGELOG.md",
+    "CONTEXT.md",
     "LICENSE",
     "NOTICE"
   ],

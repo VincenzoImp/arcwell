@@ -56,6 +56,7 @@ function allowedPayloadPath(path: string): boolean {
   return [
     /^README\.md$/,
     /^CHANGELOG\.md$/,
+    /^CONTEXT\.md$/,
     /^LICENSE$/,
     /^NOTICE$/,
     /^package\.json$/,
