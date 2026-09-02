@@ -19,7 +19,7 @@ import { createIsolatedEnvironment, replaceProcessEnvironment } from "./package-
 
 const PI_VERSION = "0.84.4";
 /** Deterministic because every catalog version is pinned exactly: a bump has to be seen. */
-const EXPECTED = { extensions: 13, skills: 17, prompts: 11, packages: 7 };
+const EXPECTED = { extensions: 14, skills: 17, prompts: 11, packages: 7 };
 /** Written by setup, and gone again after uninstall. */
 const OWNED_PATHS = ["AGENTS.md", "presets.json", "arcwell"];
 
