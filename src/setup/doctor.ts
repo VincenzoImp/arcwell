@@ -44,6 +44,12 @@ export interface DoctorReport {
 export interface DoctorDependencies {
   agentDir: string;
   piClient: Pick<PiClient, "version" | "list">;
+  /**
+   * Which of the named executables are absent. Injectable because the real one reads the host's
+   * PATH, which would make every fixture-based assertion depend on the machine running it — and
+   * silently, on the one platform the check applies to.
+   */
+  missingBinaries?: (names: readonly string[]) => string[];
 }
 
 export interface DoctorCommandDependencies {
@@ -73,7 +79,7 @@ const CLAUDE_CLI_PROVIDER = "pi-claude-cli";
 const LINUX_SANDBOX_BINARIES = ["bwrap", "socat", "rg"] as const;
 
 /** Executables missing from PATH. Read-only and spawn-free: doctor reports, it does not run. */
-function missingBinaries(names: readonly string[], environment = process.env): string[] {
+export function missingBinariesOnPath(names: readonly string[], environment = process.env): string[] {
   const directories = (environment.PATH ?? environment.Path ?? "").split(delimiter).filter(Boolean);
   return names.filter((name) => !directories.some((directory) => {
     try {
@@ -320,7 +326,7 @@ export async function runDoctor(
     // environment still works without containment, and failing here would make an unrelated
     // missing package stop a machine from being set up at all.
     if (ownership && process.platform === "linux" && config) {
-      const missing = missingBinaries(LINUX_SANDBOX_BINARIES);
+      const missing = (dependencies.missingBinaries ?? missingBinariesOnPath)(LINUX_SANDBOX_BINARIES);
       checks.push(missing.length === 0
         ? { id: "sandbox.prerequisites", status: "ok", message: "Sandbox host prerequisites are present" }
         : {

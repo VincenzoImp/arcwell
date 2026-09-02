@@ -88,7 +88,7 @@ test("local scratch setup, idempotent setup, doctor, and uninstall restore the e
     const first = await applySetup(manifest, setupDependencies);
     const afterFirst = snapshotTree(root);
     const second = await applySetup(manifest, setupDependencies);
-    const doctor = await runDoctor({ agentDir: root, piClient: client });
+    const doctor = await runDoctor({ agentDir: root, piClient: client, missingBinaries: () => [] });
 
     assert.deepEqual(second, first);
     assert.deepEqual(snapshotTree(root), afterFirst);

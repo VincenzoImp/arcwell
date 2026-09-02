@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.2
+
+### Fixed
+
+- **The sandbox prerequisite check made every doctor test depend on the machine running it.** It
+  reads the host's PATH, and on a Linux runner without `bwrap` the fixtures stopped reporting
+  healthy. The lookup is now injectable, so fixture assertions are about Arcwell rather than
+  about the host, and one test injects a *missing* host so making that injection did not quietly
+  delete the check.
+
+  It passed locally and failed in CI because the check only applies on Linux and the local runs
+  were macOS: a platform-conditional check is invisible to a single-platform test run.
+
 ## 0.6.1
 
 ### Added

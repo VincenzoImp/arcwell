@@ -86,7 +86,7 @@ test("doctor is read-only and reports a fully effective exact setup as healthy",
       ownership: readFileSync(join(root, "arcwell", "ownership.json")),
       mode: lstatSync(join(root, "AGENTS.md")).mode & 0o777,
     };
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(allSources)) });
 
     assert.equal(report.exitStatus, 0);
     assert.equal(report.status, "healthy");
@@ -107,14 +107,14 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
   const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
   try {
     writeHealthyState(root);
-    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.1";
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.2";
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push({
       ...fixturePiPackage(equivalentSource),
       installedPath: fixtureInstalledPath(ARCWELL_PACKAGE_SOURCE),
     });
 
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
 
     assert.equal(report.exitStatus, 0);
     assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "ok"));
@@ -133,7 +133,7 @@ test("doctor warns only for disabled protections, not disabled optional modules"
       ...guarded,
       protections: { ...guarded.protections, effects: false },
     });
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(enabledSources)) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(enabledSources)) });
 
     assert.equal(report.exitStatus, 1);
     assert.equal(report.status, "warnings");
@@ -153,7 +153,7 @@ test("doctor errors for selected packages missing at user scope and exact versio
     packages.push(fixturePiPackage(arcwellSource, "project"));
     // A different ref of the same repository is the conflict this asserts.
     packages.push(fixturePiPackage("git:github.com/VincenzoImp/arcwell@v0.1.0"));
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
 
     assert.equal(report.exitStatus, 2);
     assert.equal(report.status, "errors");
@@ -174,7 +174,7 @@ test("doctor errors when the Arcwell extension package or a selected external pa
     packages.find((item) => item.source === arcwellSource)!.filtered = true;
     packages.find((item) => item.source === lspSource)!.filtered = true;
 
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
 
     assert.equal(report.exitStatus, 2);
     assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "error" && /filtered/.test(check.message)));
@@ -193,7 +193,7 @@ test("doctor requires selected packages even when Arcwell did not install them",
     writeHealthyState(root, allSources.filter((source) => source !== lspSource), allSources);
     const report = await runDoctor({
       agentDir: root,
-      piClient: new FakePiClient(userPackages(allSources.filter((source) => source !== lspSource))),
+      missingBinaries: () => [], piClient: new FakePiClient(userPackages(allSources.filter((source) => source !== lspSource))),
     });
 
     assert.equal(report.exitStatus, 2);
@@ -213,7 +213,7 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
     try {
       writeHealthyState(root);
       withProvider(root, "anthropic");
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(allSources)) });
       assert.ok(report.checks.some((check) =>
         check.id === "provider.claudeCli" && check.status === "warning" && /billed per token/.test(check.message)));
     } finally {
@@ -228,7 +228,7 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
       const withAdapter = [...allSources, claudeCliSource];
       writeHealthyState(root, withAdapter);
       withProvider(root, undefined);
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(withAdapter)) });
       assert.ok(report.checks.some((check) =>
         check.id === "provider.claudeCli" && check.status === "warning" && /defaultProvider is unset/.test(check.message)));
     } finally {
@@ -242,7 +242,7 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
       const withAdapter = [...allSources, claudeCliSource];
       writeHealthyState(root, withAdapter);
       withProvider(root, "pi-claude-cli");
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(withAdapter)) });
       assert.equal(report.checks.some((check) => check.id === "provider.claudeCli"), false);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -253,6 +253,30 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
 // Arcwell cannot fix another package. It can refuse to let the failure stay invisible: passing
 // a path to --append-system-prompt replaces the agreement and every skill with that path, and
 // the CLI has nothing to complain about because a path is valid text.
+// Every other doctor test injects a satisfied host so its assertions are about Arcwell. This
+// one is the opposite: it exists so making that injection did not quietly delete the check.
+// Linux-only, because that is the only platform where the sandbox has host prerequisites.
+test("a host missing the sandbox binaries is a warning, never a failure", {
+  skip: process.platform !== "linux",
+}, async () => {
+  const root = mkdtempSync(join(temporaryRoot, "doctor-sandbox-prereq-"));
+  try {
+    writeHealthyState(root);
+    const report = await runDoctor({
+      agentDir: root,
+      piClient: new FakePiClient(userPackages(allSources)),
+      missingBinaries: () => ["bwrap", "socat"],
+    });
+
+    assert.equal(report.exitStatus, 1);
+    const check = report.checks.find((entry) => entry.id === "sandbox.prerequisites");
+    assert.equal(check?.status, "warning");
+    assert.match(check?.message ?? "", /bwrap, socat/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("doctor reads the Claude adapter's own source for the flag that decides the system prompt", async (t) => {
   const write = (root: string, line: string): string => {
     const packageRoot = join(root, "adapter");
@@ -270,7 +294,7 @@ test("doctor reads the Claude adapter's own source for the flag that decides the
       (packages.find((item) => item.source === claudeCliSource)! as PiPackage & { installedPath: string })
         .installedPath = write(root, '"--append-system-prompt"');
 
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) =>
         check.id === "package.claudeCli.systemPrompt" && check.status === "error"));
@@ -296,7 +320,7 @@ test("doctor separates bytes that differ from bytes it cannot read", async (t) =
     try {
       writeHealthyState(root);
       writeIntegrityLock(root, allSources, PACKAGE_CATALOG.find((e) => e.capability === "mcp")!.source);
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(allSources)) });
 
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) =>
@@ -313,7 +337,7 @@ test("doctor separates bytes that differ from bytes it cannot read", async (t) =
     try {
       writeHealthyState(root);
       rmSync(join(root, "npm", "node_modules", ".package-lock.json"), { force: true });
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages(allSources)) });
 
       assert.equal(report.exitStatus, 1);
       assert.ok(report.checks.some((check) => check.id === "integrity" && check.status === "warning"));
@@ -338,7 +362,7 @@ test("doctor reports a Pi that resolves to one version outside the package and a
     const packages = userPackages(allSources);
     (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
 
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
     assert.equal(report.exitStatus, 2);
     assert.ok(report.checks.some((check) =>
       check.id === "pi.nested" && check.status === "error" && /0\.84\.4.*0\.85\.0/.test(check.message)));
@@ -359,7 +383,7 @@ test("doctor rejects invalid Arcwell package metadata, manifest, and extension e
       const packages = userPackages(allSources);
       (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
 
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "error" && /name\/version/i.test(check.message)));
     } finally {
@@ -381,7 +405,7 @@ test("doctor rejects invalid Arcwell package metadata, manifest, and extension e
       const packages = userPackages(allSources);
       (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
 
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "error" && /manifest/i.test(check.message)));
     } finally {
@@ -400,7 +424,7 @@ test("doctor rejects invalid Arcwell package metadata, manifest, and extension e
       const packages = userPackages(allSources);
       (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
 
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "error" && /default export/i.test(check.message)));
     } finally {
@@ -419,7 +443,7 @@ test("doctor rejects invalid Arcwell package metadata, manifest, and extension e
       const packages = userPackages(allSources);
       (packages.find((item) => item.source === arcwellSource)! as PiPackage & { installedPath: string }).installedPath = packageRoot;
 
-      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages) });
       assert.equal(report.exitStatus, 2);
       assert.ok(report.checks.some((check) => check.id === "package.arcwell" && check.status === "error" && /load/i.test(check.message)));
     } finally {
@@ -461,7 +485,7 @@ test("doctor reports an active unowned deselected catalog package as unhealthy",
     const mcpSource = PACKAGE_CATALOG.find((entry) => entry.capability === "mcp")!.source;
     const selected = allSources.filter((source) => source !== mcpSource);
     writeHealthyState(root, selected);
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages([...selected, mcpSource])) });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(userPackages([...selected, mcpSource])) });
 
     assert.equal(report.exitStatus, 2);
     assert.ok(report.checks.some((check) => check.id === "package.unowned.mcp" && check.status === "error"));
@@ -482,7 +506,7 @@ test("doctor detects modified agreement, ineffective redaction, incompatible Pi,
     writeOwnershipAtomic(ownershipPath, ownership);
     const redaction = PACKAGE_CATALOG.find((entry) => entry.capability === "redaction")!.source;
     const packages = userPackages(allSources.filter((source) => source !== redaction));
-    const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages, "pi 0.83.0") });
+    const report = await runDoctor({ agentDir: root, missingBinaries: () => [], piClient: new FakePiClient(packages, "pi 0.83.0") });
 
     assert.equal(report.exitStatus, 2);
     assert.ok(report.checks.some((check) => check.id === "pi.version" && check.status === "error"));
