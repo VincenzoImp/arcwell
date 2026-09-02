@@ -59,6 +59,7 @@ The only profile is `core`; the default posture is `guarded`.
 | `modules.mcp` | on | `@spences10/pi-mcp` — lazy MCP; Arcwell configures no servers |
 | `modules.subagents` | on | `pi-subagents` — delegation, background and parallel runs |
 | `modules.goal` | on | `@narumitw/pi-goal` — session goals with budgets and evidence |
+| `modules.sandbox` | on | OS-level containment for `bash` — `sandbox-exec` on macOS, `bubblewrap` on Linux. The guards catch mistakes; this is the boundary |
 | `modules.claudeCli` | **off** | `pi-claude-cli` — routes Anthropic through the Claude CLI, for a subscription login. Installing it is half the job: set `defaultProvider` to `pi-claude-cli` too, and `doctor` warns for either half |
 
 **One module, one external package.** A package earns its place by saving work Arcwell would
@@ -122,9 +123,19 @@ Setup, doctor, uninstall and dry run never call a model.
 ## What the guards are, and are not
 
 Effects and secret-path matching inspect command text and supported tool results. They catch
-mistakes; they are not a sandbox, complete shell enforcement, or an authorization boundary.
-Dynamic variables, substitutions, generated commands and pre-existing scripts can evade static
-matching. Stronger enforcement needs OS isolation, which Arcwell does not provide.
+mistakes, and only mistakes: dynamic variables, substitutions, generated commands and
+pre-existing scripts all evade static matching.
+
+`modules.sandbox` is what turns that into a boundary, using
+[`@anthropic-ai/sandbox-runtime`](https://www.npmjs.com/package/@anthropic-ai/sandbox-runtime) —
+`sandbox-exec` on macOS, `bubblewrap` on Linux, configured through
+`~/.pi/agent/extensions/sandbox.json` or `<project>/.pi/sandbox.json`. On Linux it needs
+`bwrap`, `socat` and `rg` on the host; `doctor` warns when they are missing rather than
+pretending the containment is there.
+
+Order matters and is asserted by a test: the effects guard loads first, because `user_bash`
+handlers are first-wins and the guard returns nothing for a command it allows. Reversed, the
+sandbox would answer every command and the guard would stop running.
 
 Installing any Pi package runs code with your permissions. Inspect the source, `package.json`,
 dependency tree, `LICENSE` and `NOTICE` before installing — including this one.

@@ -13,6 +13,26 @@ const belongsToPackage = (path: string): boolean => {
   return candidate === "" || (!candidate.startsWith("..") && !isAbsolute(candidate));
 };
 
+/**
+ * Pi loads extensions in manifest order, and `user_bash` handlers are first-wins: the runner
+ * returns on the first handler that answers. The effects guard returns undefined for a command
+ * it allows, so the sandbox still sees it — but only while the guard runs first. Reversed, the
+ * sandbox answers every command and the guard silently stops running at all.
+ *
+ * Nothing else would catch that reordering, which is why it is pinned here rather than left to
+ * the order someone happens to append in.
+ */
+test("the effects guard loads before the sandbox that replaces the bash tool", () => {
+  const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
+    pi: { extensions: string[] };
+  };
+  const guard = pkg.pi.extensions.findIndex((entry) => entry.includes("arcwell-protections"));
+  const sandbox = pkg.pi.extensions.findIndex((entry) => entry.includes("sandbox"));
+
+  assert.ok(guard >= 0 && sandbox >= 0, "both extensions must be declared");
+  assert.ok(guard < sandbox, `arcwell-protections (${guard}) must load before sandbox (${sandbox})`);
+});
+
 test("package manifest declares the exact native Pi resource set", () => {
   const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
     private?: boolean;
@@ -55,6 +75,7 @@ test("package manifest declares the exact native Pi resource set", () => {
       "./extensions/upstream/questionnaire.ts",
       "./extensions/upstream/todo.ts",
       "./extensions/upstream/tools.ts",
+      "./extensions/upstream/sandbox/index.ts",
     ],
     skills: [
       "./skills/code-review/SKILL.md",
@@ -142,6 +163,7 @@ test("DefaultResourceLoader discovers only package resources without project lea
         "extensions/upstream/plan-mode/index.ts",
         "extensions/upstream/preset.ts",
         "extensions/upstream/questionnaire.ts",
+        "extensions/upstream/sandbox/index.ts",
         "extensions/upstream/todo.ts",
         "extensions/upstream/tools.ts",
       ],

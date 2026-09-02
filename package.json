@@ -44,7 +44,8 @@
       "./extensions/upstream/preset.ts",
       "./extensions/upstream/questionnaire.ts",
       "./extensions/upstream/todo.ts",
-      "./extensions/upstream/tools.ts"
+      "./extensions/upstream/tools.ts",
+      "./extensions/upstream/sandbox/index.ts"
     ],
     "skills": [
       "./skills/code-review/SKILL.md",
@@ -94,6 +95,7 @@
     "check:updates": "npm run build && node scripts/check-updates.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "0.0.26",
     "@types/node": "26.4.0",
     "typescript": "6.0.3"
   },

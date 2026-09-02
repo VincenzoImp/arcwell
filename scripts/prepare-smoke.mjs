@@ -127,7 +127,7 @@ try {
     // ones ship as TypeScript, so this also proves Pi loads them from a clean --omit=dev
     // install without a build step of their own.
     const expected = [
-      ["extension", extensions.extensions.filter(fromCheckout).length, 7],
+      ["extension", extensions.extensions.filter(fromCheckout).length, 8],
       ["skill", skills.skills.filter(fromCheckout).length, 15],
       ["prompt", prompts.prompts.filter(fromCheckout).length, 5],
     ];

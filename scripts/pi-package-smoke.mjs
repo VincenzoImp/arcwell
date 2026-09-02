@@ -267,8 +267,8 @@ async function verifyResources(catalogSources, npmRoot) {
   for (const entry of skillResult.skills) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
   for (const entry of promptResult.prompts) resourceBelongsToExactRoot(entry, entry.filePath, expectedRoots);
 
-  assert(extensionResult.extensions.length === 14,
-    `Expected exactly 14 extensions, found ${extensionResult.extensions.length}`);
+  assert(extensionResult.extensions.length === 15,
+    `Expected exactly 15 extensions, found ${extensionResult.extensions.length}`);
   assert(skillResult.skills.length === 17, `Expected exactly 17 skills, found ${skillResult.skills.length}`);
   assert(promptResult.prompts.length === 11, `Expected exactly 11 prompts, found ${promptResult.prompts.length}`);
 
@@ -291,6 +291,7 @@ async function verifyResources(catalogSources, npmRoot) {
     "extensions/upstream/plan-mode/index.ts",
     "extensions/upstream/preset.ts",
     "extensions/upstream/questionnaire.ts",
+    "extensions/upstream/sandbox/index.ts",
     "extensions/upstream/todo.ts",
     "extensions/upstream/tools.ts",
   ]), "Arcwell extensions were not discovered exactly from the installed local package");

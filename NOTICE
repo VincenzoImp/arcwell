@@ -26,9 +26,14 @@ Byte-identical to upstream:
 
   extensions/upstream/preset.ts
   extensions/upstream/questionnaire.ts
+  extensions/upstream/sandbox/index.ts
   extensions/upstream/todo.ts
   extensions/upstream/tools.ts
   extensions/upstream/plan-mode/utils.ts
+
+sandbox/index.ts is the only one with a dependency of its own,
+@anthropic-ai/sandbox-runtime (Apache-2.0, Anthropic), pinned at the version the
+example pins. It is declared in package.json rather than vendored.
 
 Modified, and how:
 

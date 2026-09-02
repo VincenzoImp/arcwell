@@ -66,11 +66,11 @@ test("guarded posture allows each protection to be disabled independently", asyn
 test("the external packages are one question, and declining installs none of them", async () => {
   const accepted = scriptedWizard(["", "", "", "", "", "", "yes"]);
   const acceptedManifest = await runSetupWizard(accepted.io);
-  assert.deepEqual(acceptedManifest?.modules, { lsp: true, context: true, mcp: true, subagents: true, goal: true, claudeCli: false });
+  assert.deepEqual(acceptedManifest?.modules, { lsp: true, context: true, mcp: true, subagents: true, goal: true, claudeCli: false, sandbox: true });
 
   const declined = scriptedWizard(["", "", "", "", "no", "", "yes"]);
   const declinedManifest = await runSetupWizard(declined.io);
-  assert.deepEqual(declinedManifest?.modules, { lsp: false, context: false, mcp: false, subagents: false, goal: false, claudeCli: false });
+  assert.deepEqual(declinedManifest?.modules, { lsp: false, context: false, mcp: false, subagents: false, goal: false, claudeCli: false, sandbox: false });
 
   // Capabilities Arcwell ships itself are not wizard questions: they arrive with the package
   // and are disabled through `pi config`.

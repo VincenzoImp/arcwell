@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { parseArgs } from "node:util";
 
 import type { CommandIo } from "../commands/types.js";
@@ -65,6 +65,24 @@ function readRegularText(path: string): string {
 
 /** The provider name pi-claude-cli registers, which is the package name rather than "claude". */
 const CLAUDE_CLI_PROVIDER = "pi-claude-cli";
+
+/**
+ * What the sandbox needs from the host on Linux. macOS uses `sandbox-exec`, which ships with
+ * the OS, so there is nothing to check there.
+ */
+const LINUX_SANDBOX_BINARIES = ["bwrap", "socat", "rg"] as const;
+
+/** Executables missing from PATH. Read-only and spawn-free: doctor reports, it does not run. */
+function missingBinaries(names: readonly string[], environment = process.env): string[] {
+  const directories = (environment.PATH ?? environment.Path ?? "").split(delimiter).filter(Boolean);
+  return names.filter((name) => !directories.some((directory) => {
+    try {
+      return existsSync(join(directory, name));
+    } catch {
+      return false;
+    }
+  }));
+}
 
 /** The provider selected in Pi's settings, or undefined when unreadable. Never auth state. */
 function configuredProvider(agentDir: string): string | undefined {
@@ -263,6 +281,20 @@ export async function runDoctor(
       checks.push(effectivePackage(entry.source)
         ? { id: `module.${moduleName}`, status: "ok", message: `Module ${moduleName} is effectively enabled` }
         : { id: `module.${moduleName}`, status: "error", message: `Selected module ${moduleName} is missing or filtered` });
+    }
+
+    // A sandbox that cannot start has to say so. It is a warning and never an error: the
+    // environment still works without containment, and failing here would make an unrelated
+    // missing package stop a machine from being set up at all.
+    if (ownership && process.platform === "linux" && config) {
+      const missing = missingBinaries(LINUX_SANDBOX_BINARIES);
+      checks.push(missing.length === 0
+        ? { id: "sandbox.prerequisites", status: "ok", message: "Sandbox host prerequisites are present" }
+        : {
+          id: "sandbox.prerequisites",
+          status: "warning",
+          message: `Sandbox cannot contain anything until these are installed: ${missing.join(", ")}`,
+        });
     }
 
     // Configuration, not authentication state: which provider is selected, never whether or how
