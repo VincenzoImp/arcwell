@@ -8,7 +8,7 @@ import { validArcwellPackageDir } from "./setup-package-fixture.js";
 
 const expectedManifest = {
   name: "arcwell",
-  version: "0.6.2",
+  version: "0.6.3",
   type: "module",
   pi: {
     extensions: ["./dist/extensions/arcwell-protections.js"],

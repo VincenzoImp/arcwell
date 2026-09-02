@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.3
+
+### Fixed
+
+- The lifecycle smoke asserted `doctor` reported healthy, so a CI host without `bwrap`,
+  `socat` and `rg` failed on the sandbox prerequisite warning — the check doing exactly its
+  job. The allowance is narrow: only that check, only as a warning.
+
 ## 0.6.2
 
 ### Fixed

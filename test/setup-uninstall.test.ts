@@ -55,7 +55,7 @@ function writeState(root: string, installedPackageSources = [arcwellSource, owne
   })}\n`, { mode: 0o600 });
   const ownership: ArcwellOwnership = {
     schemaVersion: 1,
-    arcwellVersion: "0.6.2",
+    arcwellVersion: "0.6.3",
     manifestDigest: "a".repeat(64),
     installedPackageSources,
     installedResources: [],
@@ -217,7 +217,7 @@ test("uninstall refuses a changed equivalent Git form when the exact owned setti
   const root = mkdtempSync(join(temporaryRoot, "uninstall-changed-git-form-"));
   try {
     writeState(root);
-    const changedSource = "git:https://github.com/VincenzoImp/arcwell@v0.6.2";
+    const changedSource = "git:https://github.com/VincenzoImp/arcwell@v0.6.3";
     const client = new FakePiClient([
       piPackage(changedSource),
       piPackage(ownedSource),
@@ -238,7 +238,7 @@ test("uninstall refuses an extra equivalent Git form beside the exact owned sett
   const root = mkdtempSync(join(temporaryRoot, "uninstall-extra-git-form-"));
   try {
     writeState(root);
-    const extraSource = "ssh://git@github.com/VincenzoImp/arcwell@v0.6.2";
+    const extraSource = "ssh://git@github.com/VincenzoImp/arcwell@v0.6.3";
     const client = new FakePiClient([
       piPackage(arcwellSource),
       piPackage(extraSource),
@@ -386,7 +386,7 @@ test("setup and uninstall restore a pre-existing AGENTS.md without a final newli
 test("setup and uninstall preserve a pre-existing equivalent Arcwell Git source", async () => {
   const root = mkdtempSync(join(temporaryRoot, "lifecycle-equivalent-arcwell-"));
   try {
-    const equivalentSource = "https://github.com/VincenzoImp/arcwell@v0.6.2";
+    const equivalentSource = "https://github.com/VincenzoImp/arcwell@v0.6.3";
     const equivalentPackage = {
       ...piPackage(equivalentSource),
       installedPath: piPackage(arcwellSource).installedPath,
