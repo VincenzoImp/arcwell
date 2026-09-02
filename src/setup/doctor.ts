@@ -84,6 +84,28 @@ function missingBinaries(names: readonly string[], environment = process.env): s
   }));
 }
 
+const claudeCliEntry = PACKAGE_CATALOG.find((entry) => entry.capability === "claudeCli")!;
+
+/**
+ * Whether the installed adapter hands Claude Code a prompt file or a path pretending to be one.
+ *
+ * `--append-system-prompt` takes literal text. pi-claude-cli 0.3.1 passes it the path of a temp
+ * file, so what reaches the model is the path — the agreement and every skill description are
+ * gone, silently, because a path is valid text. Arcwell cannot fix another package, but it can
+ * refuse to let the failure stay invisible.
+ *
+ * Returns undefined when the file cannot be read, which is not a finding.
+ */
+export function passesSystemPromptAsFile(packageRoot: string): boolean | undefined {
+  try {
+    const source = readFileSync(join(packageRoot, "src", "process-manager.ts"), "utf8");
+    if (!source.includes("--append-system-prompt")) return undefined;
+    return source.includes("--append-system-prompt-file");
+  } catch {
+    return undefined;
+  }
+}
+
 /** The provider selected in Pi's settings, or undefined when unreadable. Never auth state. */
 function configuredProvider(agentDir: string): string | undefined {
   try {
@@ -237,6 +259,17 @@ export async function runDoctor(
             message: `Pi ${hostPiVersion} is running the agent but the Arcwell package resolves Pi ${nested}`,
           });
         continue;
+      }
+      if (source === claudeCliEntry.source) {
+        checks.push(passesSystemPromptAsFile(installedPackage.installedPath) === false
+          ? {
+            id: "package.claudeCli.systemPrompt",
+            status: "error",
+            message: "pi-claude-cli passes a path to --append-system-prompt, which takes literal "
+              + "text: the working agreement and every skill are silently replaced by that path. "
+              + "Fix: rchern/pi-claude-cli#39, or patch --append-system-prompt-file in place",
+          }
+          : { id: "package.claudeCli.systemPrompt", status: "ok", message: "pi-claude-cli delivers the system prompt as a file" });
       }
       checks.push({ id: sourceCheckId(source), status: "ok", message: `Required user package ${source} is present` });
     }

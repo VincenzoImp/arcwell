@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.6.1
+
+### Added
+
+- **`doctor` reads the Claude adapter's own source** and errors when it hands a path to
+  `--append-system-prompt`, a flag that takes literal text. That is `pi-claude-cli@0.3.1`, and
+  the effect is that the working agreement and every skill description are replaced by a path —
+  silently, because a path is valid text and the CLI has nothing to complain about. Arcwell
+  cannot fix another package; it can refuse to let the failure stay invisible.
+
+### Unchanged, and now on evidence
+
+- **The pin stays on the unmaintained original.** `@saccolabs/pi-claude-cli@0.6.0` is the active
+  continuation and carries the same fix, done better. It was evaluated and rejected: in
+  `--print` mode it returns an empty assistant message, zero tokens, no error. The control is
+  that the original answers correctly in the same scratch environment with the same model and
+  flags, so it is the package and not the environment. A provider that cannot run headless
+  would break every non-interactive use.
+
+  Vendoring the fixed adapter was the alternative and was not taken: it would make this
+  repository the maintainer of a whole provider, which is what the catalog exists to avoid.
+
 ## 0.6.0
 
 Breaking: `modules` gains `sandbox`, and every catalog entry now carries an integrity hash, so

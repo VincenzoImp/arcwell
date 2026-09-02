@@ -3,7 +3,7 @@ import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, uti
 import { join } from "node:path";
 import test from "node:test";
 
-import { runDoctor } from "../src/setup/doctor.js";
+import { passesSystemPromptAsFile, runDoctor } from "../src/setup/doctor.js";
 import { PACKAGE_CATALOG } from "../src/setup/catalog.js";
 import { writeRuntimeConfigAtomic } from "../src/setup/config.js";
 import { ARCWELL_VERSION } from "../src/setup/manifest.js";
@@ -107,7 +107,7 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
   const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
   try {
     writeHealthyState(root);
-    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.0";
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.1";
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push({
       ...fixturePiPackage(equivalentSource),
@@ -244,6 +244,46 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
       withProvider(root, "pi-claude-cli");
       const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
       assert.equal(report.checks.some((check) => check.id === "provider.claudeCli"), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// Arcwell cannot fix another package. It can refuse to let the failure stay invisible: passing
+// a path to --append-system-prompt replaces the agreement and every skill with that path, and
+// the CLI has nothing to complain about because a path is valid text.
+test("doctor reads the Claude adapter's own source for the flag that decides the system prompt", async (t) => {
+  const write = (root: string, line: string): string => {
+    const packageRoot = join(root, "adapter");
+    mkdirSync(join(packageRoot, "src"), { recursive: true });
+    writeFileSync(join(packageRoot, "src", "process-manager.ts"), `args.push(${line}, tmpFile);\n`);
+    return packageRoot;
+  };
+
+  await t.test("a path handed to the literal-text flag is an error", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-claude-flag-bad-"));
+    try {
+      const withAdapter = [...allSources, claudeCliSource];
+      writeHealthyState(root, withAdapter);
+      const packages = userPackages(withAdapter);
+      (packages.find((item) => item.source === claudeCliSource)! as PiPackage & { installedPath: string })
+        .installedPath = write(root, '"--append-system-prompt"');
+
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(packages) });
+      assert.equal(report.exitStatus, 2);
+      assert.ok(report.checks.some((check) =>
+        check.id === "package.claudeCli.systemPrompt" && check.status === "error"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  await t.test("the file flag is accepted, and an unreadable adapter is not a finding", () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-claude-flag-good-"));
+    try {
+      assert.equal(passesSystemPromptAsFile(write(root, '"--append-system-prompt-file"')), true);
+      assert.equal(passesSystemPromptAsFile(join(root, "does-not-exist")), undefined);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

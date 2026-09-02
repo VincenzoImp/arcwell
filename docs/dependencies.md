@@ -47,6 +47,21 @@ every session — found here on 2026-09-02, reported as
 [rchern/pi-claude-cli#39](https://github.com/rchern/pi-claude-cli/pull/39). `check:updates`
 now reports a package with no release for over 120 days, which is what nobody was watching.
 
+**Why the pin stays on the unmaintained original.** `@saccolabs/pi-claude-cli` is the active
+continuation — 0.6.0 against 0.3.1, more downloads than the origin, and the same bug fixed two
+days earlier and better, distinguishing `--system-prompt-file` from `--append-system-prompt-file`
+and naming the temp file per session rather than per process. It was evaluated here and
+**rejected on evidence**: in `--print` mode it returns an empty assistant message with zero
+tokens and no error. The control that settles it is that the original answers correctly in the
+same scratch environment, on the same model, with the same flags — so it is the package and not
+the environment. Its observer-mode architecture may simply require the TUI; either way,
+adopting a provider that cannot run headless would break every non-interactive use.
+
+Vendoring the fixed adapter was the alternative and was not taken: it would make this repository
+the maintainer of a whole provider, which is the opposite of what the catalog is for. Instead
+`doctor` reads the installed adapter's own source and **errors** when it hands a path to
+`--append-system-prompt`, so the failure is loud rather than silent until the PR lands.
+
 ## What breaks without each
 
 | Package | If it stops being maintained |
