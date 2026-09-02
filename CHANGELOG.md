@@ -1,5 +1,56 @@
 # Changelog
 
+## 0.6.0
+
+Breaking: `modules` gains `sandbox`, and every catalog entry now carries an integrity hash, so
+a 0.5.x manifest is rejected. Regenerate with
+`arcwell setup --dry-run --write-manifest arcwell.json`.
+
+This release is about what happens when a dependency turns out not to have a maintainer. The
+measured picture, now written down in `docs/dependencies.md`: **five of the seven catalog
+packages are one person**, four sit under 2,500 downloads a month, and `pi-claude-cli` went
+unmaintained for 164 days on the path that decides how Anthropic bills you, carrying a bug that
+silently discarded the entire system prompt.
+
+### Added
+
+- **`modules.sandbox`, on by default** — Pi's sandbox example, vendored beside the other five,
+  containing `bash` at the OS with `@anthropic-ai/sandbox-runtime` (Anthropic, Apache-2.0,
+  1.25M downloads a month). The guards read command text and catch mistakes; a variable, a
+  substitution or a generated command walks past them. This does not.
+
+  The integration was the first thing settled, not the last. Both extensions handle
+  `user_bash`, and `emitUserBash` is first-wins. The guard returns undefined for a command it
+  allows, so the sandbox still sees it — **but only while the guard loads first**. Reversed, the
+  sandbox answers everything and the guard silently stops running. Manifest order is load order,
+  and a test now fails if the two are swapped.
+
+  `modules` therefore means one of two things, and `types.ts` says so: a package to install, or
+  a system prerequisite to check. On Linux the sandbox needs `bwrap`, `socat` and `rg`; `doctor`
+  warns when they are missing and never fails, because an environment without containment still
+  works.
+- **Integrity pinning.** Every catalog entry records the published tarball's sha512 SRI. `setup`
+  verifies after the installs and before ownership is written, so a mismatch unwinds rather than
+  recording ownership over unreviewed bytes; `doctor` re-checks. A differing artifact is an
+  error, an unreadable lock file a warning — reporting the second as the first would train the
+  reader to ignore both.
+- **`npm run review:upgrade -- <pkg> <from> <to>`.** Fetches both versions with
+  `npm pack --ignore-scripts`, installs nothing, and reports files added/removed/changed,
+  dependency changes, size delta, and **lifecycle scripts that appeared** — the line between a
+  package that computes something and one that runs on your machine.
+- **`check:updates` gains republish and staleness detection.** A pinned version whose bytes
+  changed fails; a package with no release for over 120 days is reported and never fails,
+  because a package can be finished rather than abandoned. Its first run named `pi-claude-cli`
+  at 164 days.
+- `docs/dependencies.md` records downloads, stars, last release and maintainer count per
+  package, and what breaks if each stops being maintained.
+
+### Changed
+
+- `@anthropic-ai/sandbox-runtime` is pinned at `0.0.75`, ahead of the `0.0.26` the example
+  pins. Being 49 releases behind on the component that does the containing is worse than
+  diverging from the example; the three entry points the file calls were checked first.
+
 ## 0.5.1
 
 ### Fixed

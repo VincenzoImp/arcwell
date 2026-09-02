@@ -17,7 +17,7 @@ mkdirSync(temporaryRoot, { recursive: true });
 const digest = "a".repeat(64);
 const ownership: ArcwellOwnership = {
   schemaVersion: 1,
-  arcwellVersion: "0.5.1",
+  arcwellVersion: "0.6.0",
   manifestDigest: digest,
   installedPackageSources: [ARCWELL_PACKAGE_SOURCE],
   installedResources: [],

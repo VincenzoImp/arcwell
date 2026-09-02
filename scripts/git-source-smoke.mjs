@@ -170,6 +170,7 @@ try {
     "extensions/upstream/plan-mode/index.ts",
     "extensions/upstream/preset.ts",
     "extensions/upstream/questionnaire.ts",
+    "extensions/upstream/sandbox/index.ts",
     "extensions/upstream/todo.ts",
     "extensions/upstream/tools.ts",
   ]), `Git-source payload delivered a different extension set: ${extensionPaths.join(", ")}`);
