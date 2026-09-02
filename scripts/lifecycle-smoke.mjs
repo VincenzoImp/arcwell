@@ -108,9 +108,12 @@ try {
   }
 
   const report = JSON.parse(arcwell(["doctor", "--json"], { capture: true }));
-  const notOk = report.checks.filter((check) => check.status !== "ok");
-  assert(report.status === "healthy" && notOk.length === 0,
-    `Doctor reported ${report.status}: ${JSON.stringify(notOk)}`);
+  // A runner without bwrap/socat/rg is an honest warning about the host, not a defect in the
+  // setup this smoke is testing. Everything else must still be ok, and it must be a warning
+  // rather than an error, so the allowance cannot hide a real failure.
+  const notOk = report.checks.filter((check) =>
+    check.status !== "ok" && !(check.id === "sandbox.prerequisites" && check.status === "warning"));
+  assert(notOk.length === 0, `Doctor reported ${report.status}: ${JSON.stringify(notOk)}`);
 
   const settings = readJson(join(agentDir, "settings.json"));
   assert(settings.packages.length === EXPECTED.packages,
