@@ -13,7 +13,7 @@ import { assertArcwellPackageHealthy } from "../src/setup/package-health.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
 import type { RuntimeConfig } from "../src/setup/types.js";
 import { workingAgreementDigest } from "../src/setup/working-agreement.js";
-import { fixtureInstalledPath, fixturePiPackage } from "./setup-package-fixture.js";
+import { fixtureInstalledPath, fixturePiPackage, writeIntegrityLock } from "./setup-package-fixture.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
@@ -67,6 +67,7 @@ function writeHealthyState(
     arcwellDirectoryExisted: false,
     subagentOverridesWritten: false,
   };
+  writeIntegrityLock(root, selectedSources);
   writeOwnershipAtomic(join(root, "arcwell", "ownership.json"), ownership);
   return ownership;
 }
@@ -243,6 +244,39 @@ test("doctor warns on both halves of the Claude billing path", async (t) => {
       withProvider(root, "pi-claude-cli");
       const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(withAdapter)) });
       assert.equal(report.checks.some((check) => check.id === "provider.claudeCli"), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+test("doctor separates bytes that differ from bytes it cannot read", async (t) => {
+  await t.test("a substituted artifact is an error, and names the package", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-integrity-bad-"));
+    try {
+      writeHealthyState(root);
+      writeIntegrityLock(root, allSources, PACKAGE_CATALOG.find((e) => e.capability === "mcp")!.source);
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+
+      assert.equal(report.exitStatus, 2);
+      assert.ok(report.checks.some((check) =>
+        check.id === "integrity" && check.status === "error" && /pi-mcp/.test(check.message)));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // Not knowing is not the same as tampering, and reporting it as an error would train the
+  // reader to ignore the check on any machine npm has not written a lock file for yet.
+  await t.test("an unreadable lock file is a warning, not an error", async () => {
+    const root = mkdtempSync(join(temporaryRoot, "doctor-integrity-none-"));
+    try {
+      writeHealthyState(root);
+      rmSync(join(root, "npm", "node_modules", ".package-lock.json"), { force: true });
+      const report = await runDoctor({ agentDir: root, piClient: new FakePiClient(userPackages(allSources)) });
+
+      assert.equal(report.exitStatus, 1);
+      assert.ok(report.checks.some((check) => check.id === "integrity" && check.status === "warning"));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
-import { PACKAGE_CATALOG } from "./catalog.js";
+import { PACKAGE_CATALOG, selectedCatalogEntries } from "./catalog.js";
 import {
   assertNoSymbolicLinkComponents,
   parseRuntimeConfigJson,
@@ -36,6 +36,7 @@ import {
 import { createSetupPlan } from "./plan.js";
 import { readOwnership, writeOwnershipAtomic, type ArcwellOwnership } from "./ownership.js";
 import type { PiClient, PiPackage } from "./pi-client.js";
+import { integrityMismatches } from "./integrity.js";
 import { COMPATIBLE_PI_VERSION, normalizedPiVersion } from "./pi-version.js";
 import { applySubagentOverrides, settingsPath } from "./subagent-overrides.js";
 import type { RuntimeConfig, SetupManifest } from "./types.js";
@@ -206,6 +207,17 @@ export async function applySetup(
       if (desired.some((desiredSource) => packageSourcesEquivalent(source, desiredSource))) continue;
       await piClient.remove(source, signal);
       removedPrior.push(source);
+    }
+
+    // The installs are done, so npm has recorded what it fetched. Compare it against what the
+    // catalog says was audited, and fail here rather than record ownership over bytes nobody
+    // reviewed. Throwing inside the try unwinds `changedFiles` like any other failure.
+    const mismatches = integrityMismatches(agentDir, selectedCatalogEntries(manifest));
+    if (mismatches && mismatches.length > 0) {
+      const detail = mismatches
+        .map((m) => `${m.source}: expected ${m.expected}, found ${m.actual ?? "no recorded integrity"}`)
+        .join("; ");
+      throw new Error(`package integrity does not match the audited catalog: ${detail}`);
     }
 
     const ownedSources = [...new Set([

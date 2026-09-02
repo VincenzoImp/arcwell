@@ -17,6 +17,7 @@ import {
 } from "./package-source.js";
 import { createPiClient, type PiClient, type PiPackage } from "./pi-client.js";
 import { moduleNames, protectionNames, type RuntimeConfig } from "./types.js";
+import { integrityMismatches } from "./integrity.js";
 import { COMPATIBLE_PI_VERSION, nestedPiVersion, normalizedPiVersion } from "./pi-version.js";
 import { managedWorkingAgreementDigest } from "./working-agreement.js";
 
@@ -220,6 +221,23 @@ export async function runDoctor(
         continue;
       }
       checks.push({ id: sourceCheckId(source), status: "ok", message: `Required user package ${source} is present` });
+    }
+
+    // A pin names a release; this asks whether the bytes on disk are the ones that were audited.
+    // Unreadable is reported apart from mismatched: not knowing is not the same as tampering.
+    if (ownership) {
+      const selected = PACKAGE_CATALOG.filter((entry) => ownership.selectedPackageSources.includes(entry.source));
+      const mismatches = integrityMismatches(dependencies.agentDir, selected);
+      checks.push(mismatches === undefined
+        ? { id: "integrity", status: "warning", message: "Package integrity could not be read from the npm lock file" }
+        : mismatches.length === 0
+          ? { id: "integrity", status: "ok", message: `All ${selected.length} installed packages match the audited integrity` }
+          : {
+            id: "integrity",
+            status: "error",
+            message: `Installed bytes differ from the audited catalog: ${mismatches
+              .map((m) => `${m.source} (${m.actual ?? "no recorded integrity"})`).join(", ")}`,
+          });
     }
 
     if (ownership) {

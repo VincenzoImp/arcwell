@@ -8,7 +8,8 @@ import { createDefaultManifest } from "../src/setup/manifest.js";
 import { ARCWELL_PACKAGE_SOURCE } from "../src/setup/package-source.js";
 import { createSetupPlan } from "../src/setup/plan.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
-import { fixtureInstalledPath, fixturePiPackage } from "./setup-package-fixture.js";
+import { PACKAGE_CATALOG } from "../src/setup/catalog.js";
+import { fixtureInstalledPath, fixturePiPackage, writeIntegrityLock } from "./setup-package-fixture.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
@@ -39,9 +40,12 @@ class FakePiClient implements PiClient {
 
   async version(): Promise<string> { return this.reportedVersion; }
   async list(): Promise<PiPackage[]> { return this.installed.map((item) => ({ ...item })); }
+  onInstall?: () => void;
+
   async install(source: string): Promise<void> {
     this.installs.push(source);
     this.installed.push(fixturePiPackage(source));
+    this.onInstall?.();
   }
   async remove(source: string): Promise<void> {
     this.removals.push(source);
@@ -61,6 +65,28 @@ test("apply preflights npm identity conflicts before mutation", async () => {
     }), /package identity conflict.*@spences10\/pi-lsp/);
     assert.deepEqual(client.installs, []);
     assert.deepEqual(client.removals, []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("apply refuses bytes that are not the audited ones, and leaves nothing behind", async () => {
+  const root = mkdtempSync(join(temporaryRoot, "apply-integrity-"));
+  try {
+    const corrupt = PACKAGE_CATALOG.find((entry) => entry.capability === "lsp")!.source;
+    const client = new FakePiClient();
+    client.onInstall = () => writeIntegrityLock(root, client.installed.map((item) => item.source), corrupt);
+
+    await assert.rejects(applySetup(createDefaultManifest(), {
+      agentDir: root,
+      piClient: client,
+      workingAgreement: agreement,
+    }), /integrity does not match the audited catalog.*pi-lsp/);
+
+    // The unwind matters as much as the refusal: a setup that stopped halfway would leave an
+    // agreement and a config written over packages nobody reviewed.
+    assert.equal(existsSync(join(root, "AGENTS.md")), false);
+    assert.equal(existsSync(join(root, "arcwell")), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

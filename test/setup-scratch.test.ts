@@ -18,7 +18,7 @@ import { createDefaultManifest } from "../src/setup/manifest.js";
 import { readOwnership } from "../src/setup/ownership.js";
 import type { PiClient, PiPackage } from "../src/setup/pi-client.js";
 import { uninstallArcwell } from "../src/setup/uninstall.js";
-import { fixturePiPackage } from "./setup-package-fixture.js";
+import { fixturePiPackage, writeIntegrityLock } from "./setup-package-fixture.js";
 
 const temporaryRoot = join(process.cwd(), ".tmp-tests");
 mkdirSync(temporaryRoot, { recursive: true });
@@ -58,16 +58,23 @@ test("local scratch setup, idempotent setup, doctor, and uninstall restore the e
       async install(source) {
         installs.push(source);
         packages.push(fixturePiPackage(source));
+        // npm records the tarball integrity for everything it installs; a fake that skipped it
+        // would leave the verification with nothing to read and pass for the wrong reason.
+        writeIntegrityLock(root, packages.map((item) => item.source));
       },
       async remove(source) {
         removals.push(source);
         const index = packages.findIndex((item) => item.source === source);
         if (index >= 0) packages.splice(index, 1);
+        writeIntegrityLock(root, packages.map((item) => item.source));
       },
     };
     const agents = join(root, "AGENTS.md");
     writeFileSync(agents, "Personal instructions\n", { mode: 0o640 });
     chmodSync(agents, 0o640);
+    // Pi owns npm/ and its lock file, and both exist before Arcwell runs. Seeding them here is
+    // what makes "uninstall restores the tree" a claim about Arcwell rather than about npm.
+    writeIntegrityLock(root, packages.map((item) => item.source));
     const initialTree = snapshotTree(root);
     const initialPackages = packages.map((item) => ({ ...item }));
 
