@@ -107,7 +107,7 @@ test("doctor locates a selected Arcwell package by semantic Git source", async (
   const root = mkdtempSync(join(temporaryRoot, "doctor-equivalent-git-"));
   try {
     writeHealthyState(root);
-    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.3";
+    const equivalentSource = "git:ssh://git@github.com/VincenzoImp/arcwell@v0.6.4";
     const packages = userPackages(allSources.filter((source) => source !== arcwellSource));
     packages.push({
       ...fixturePiPackage(equivalentSource),

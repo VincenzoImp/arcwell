@@ -16,7 +16,7 @@ export const validArcwellPackageDir = join(
 
 const validArcwellManifest = {
   name: "arcwell",
-  version: "0.6.3",
+  version: "0.6.4",
   type: "module",
   pi: {
     extensions: ["./dist/extensions/arcwell-protections.js"],

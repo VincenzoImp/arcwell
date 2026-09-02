@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.4
+
+### Fixed
+
+- The lifecycle smoke still failed on a host without the sandbox binaries: the relaxed
+  assertion sat *behind* a helper that required exit 0, and `doctor` exits 1 on warnings.
+  Fixed at the layer that actually refused.
+
 ## 0.6.3
 
 ### Fixed

@@ -131,7 +131,7 @@ test("apply rejects another ref of the Arcwell Git repository before mutation", 
 test("apply accepts a same-ref semantic Arcwell Git source without installing or owning it", async () => {
   const root = mkdtempSync(join(temporaryRoot, "apply-equivalent-git-"));
   try {
-    const preexisting = "https://github.com/VincenzoImp/arcwell@v0.6.3";
+    const preexisting = "https://github.com/VincenzoImp/arcwell@v0.6.4";
     const client = new FakePiClient([preexisting]);
     client.installed[0]!.installedPath = fixtureInstalledPath(ARCWELL_PACKAGE_SOURCE);
     const ownership = await applySetup(createDefaultManifest(), {
@@ -216,7 +216,7 @@ test("apply health syntax-loads the Arcwell protection extension without registe
     mkdirSync(join(packageRoot, "dist", "extensions"), { recursive: true });
     writeFileSync(join(packageRoot, "package.json"), JSON.stringify({
       name: "arcwell",
-      version: "0.6.3",
+      version: "0.6.4",
       type: "module",
       pi: { extensions: ["./dist/extensions/arcwell-protections.js"] },
     }));

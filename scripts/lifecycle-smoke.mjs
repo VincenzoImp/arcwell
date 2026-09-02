@@ -68,7 +68,7 @@ function assert(condition, message) {
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 
 /** Runs the locally built CLI, which is the code under test; only the package source is remote. */
-function arcwell(args, { capture = false } = {}) {
+function arcwell(args, { capture = false, allowExit = [0] } = {}) {
   const result = spawnSync(process.execPath, [join(repositoryRoot, "dist", "src", "cli.js"), ...args], {
     cwd: projectDir,
     env: isolatedEnvironment,
@@ -76,7 +76,8 @@ function arcwell(args, { capture = false } = {}) {
     stdio: capture ? ["ignore", "pipe", "inherit"] : "inherit",
   });
   if (result.error) throw result.error;
-  assert(result.status === 0, `arcwell ${args[0]} exited ${result.status ?? "unknown"}`);
+  assert(allowExit.includes(result.status),
+    `arcwell ${args[0]} exited ${result.status ?? "unknown"}, expected one of ${allowExit.join(", ")}`);
   return result.stdout ?? "";
 }
 
@@ -107,7 +108,9 @@ try {
     assert(existsSync(join(agentDir, owned)), `Setup did not create ${owned}`);
   }
 
-  const report = JSON.parse(arcwell(["doctor", "--json"], { capture: true }));
+  // Exit 1 is doctor's code for warnings, and a host without the sandbox binaries earns one.
+  // The check-level assertion below is what decides; this only stops the helper refusing first.
+  const report = JSON.parse(arcwell(["doctor", "--json"], { capture: true, allowExit: [0, 1] }));
   // A runner without bwrap/socat/rg is an honest warning about the host, not a defect in the
   // setup this smoke is testing. Everything else must still be ok, and it must be a warning
   // rather than an error, so the allowance cannot hide a real failure.
