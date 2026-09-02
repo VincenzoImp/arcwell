@@ -128,10 +128,23 @@ pre-existing scripts all evade static matching.
 
 `modules.sandbox` is what turns that into a boundary, using
 [`@anthropic-ai/sandbox-runtime`](https://www.npmjs.com/package/@anthropic-ai/sandbox-runtime) —
-`sandbox-exec` on macOS, `bubblewrap` on Linux, configured through
-`~/.pi/agent/extensions/sandbox.json` or `<project>/.pi/sandbox.json`. On Linux it needs
-`bwrap`, `socat` and `rg` on the host; `doctor` warns when they are missing rather than
-pretending the containment is there.
+`sandbox-exec` on macOS, `bubblewrap` on Linux. On Linux it needs `bwrap`, `socat` and `rg` on
+the host; `doctor` warns when they are missing rather than pretending the containment is there.
+
+**It applies with no configuration at all**, which is the point, and its defaults restrict more
+than filesystem reads:
+
+| | default |
+|---|---|
+| reads denied | `~/.ssh`, `~/.aws`, `~/.gnupg` |
+| writes allowed | the working directory and `/tmp` |
+| writes denied | `.env`, `.env.*`, `*.pem`, `*.key` |
+| network | **allowlist**: npm, PyPI and GitHub only |
+
+The network allowlist is the one that surprises: a private registry, an internal API or a
+package host outside that list is unreachable until you add it. Widen it in
+`~/.pi/agent/extensions/sandbox.json` (global) or `<project>/.pi/sandbox.json` (per project,
+takes precedence), or run `pi --no-sandbox` for a single session.
 
 Order matters and is asserted by a test: the effects guard loads first, because `user_bash`
 handlers are first-wins and the guard returns nothing for a command it allows. Reversed, the
