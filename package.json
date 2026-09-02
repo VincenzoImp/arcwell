@@ -92,10 +92,11 @@
     "test:lifecycle": "npm run build && node scripts/lifecycle-smoke.mjs",
     "check": "npm test && npm run check:upstream",
     "check:upstream": "node scripts/check-upstream.mjs",
-    "check:updates": "npm run build && node scripts/check-updates.mjs"
+    "check:updates": "npm run build && node scripts/check-updates.mjs",
+    "review:upgrade": "node scripts/review-upgrade.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sandbox-runtime": "0.0.26",
+    "@anthropic-ai/sandbox-runtime": "0.0.75",
     "@types/node": "26.4.0",
     "typescript": "6.0.3"
   },

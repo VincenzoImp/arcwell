@@ -32,8 +32,13 @@ Byte-identical to upstream:
   extensions/upstream/plan-mode/utils.ts
 
 sandbox/index.ts is the only one with a dependency of its own,
-@anthropic-ai/sandbox-runtime (Apache-2.0, Anthropic), pinned at the version the
-example pins. It is declared in package.json rather than vendored.
+@anthropic-ai/sandbox-runtime (Apache-2.0, Anthropic). It is declared in
+package.json rather than vendored, and pinned at 0.0.75 rather than the 0.0.26
+the example pins: it is the component that does the containing, and being 49
+releases behind on that is worse than diverging from the example here. The
+three entry points the file calls -- initialize, reset, wrapWithSandbox -- were
+checked against 0.0.75 before the bump. The extension source itself is
+unchanged, which is what check:upstream compares.
 
 Modified, and how:
 
